@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>{{ page_title }} · Delivery Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-mark">D</div>
+
+            <div>
+                <h1>Delivery</h1>
+                <span>Dashboard</span>
+            </div>
+        </div>
+
+        <nav class="navigation">
+
+            <a href="/dashboard" class="nav-item active">
+                <span>▦</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/deliveries" class="nav-item">
+                <span>□</span>
+                <span>Deliveries</span>
+            </a>
+
+            <a href="/customers" class="nav-item">
+                <span>♙</span>
+                <span>Customers</span>
+            </a>
+
+            <a href="/drivers" class="nav-item">
+                <span>♙</span>
+                <span>Drivers</span>
+            </a>
+
+            <a href="/reports" class="nav-item">
+                <span>◫</span>
+                <span>Reports</span>
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <button
+                type="button"
+                class="menu-button"
+                id="menuButton"
+                aria-label="Toggle navigation"
+            >
+                ☰
+            </button>
+
+            <div>
+                <h2>{{ page_title }}</h2>
+                <p>Monitor your deliveries and operations.</p>
+            </div>
+
+        </header>
+
+
+        <section class="content">
+
+            <div class="page-heading">
+                <div>
+                    <h3>Overview</h3>
+                    <p>
+                        Your delivery operations at a glance.
+                    </p>
+                </div>
+
+                <a href="/deliveries/new" class="button">
+                    + New Delivery
+                </a>
+            </div>
+
+
+            <div class="stats-grid">
+
+                <article class="stat-card">
+                    <span class="stat-label">
+                        Total Deliveries
+                    </span>
+
+                    <strong class="stat-value">
+                        0
+                    </strong>
+
+                    <span class="stat-description">
+                        All deliveries
+                    </span>
+                </article>
+
+
+                <article class="stat-card">
+                    <span class="stat-label">
+                        Pending
+                    </span>
+
+                    <strong class="stat-value">
+                        0
+                    </strong>
+
+                    <span class="stat-description">
+                        Awaiting pickup
+                    </span>
+                </article>
+
+
+                <article class="stat-card">
+                    <span class="stat-label">
+                        In Transit
+                    </span>
+
+                    <strong class="stat-value">
+                        0
+                    </strong>
+
+                    <span class="stat-description">
+                        Currently moving
+                    </span>
+                </article>
+
+
+                <article class="stat-card">
+                    <span class="stat-label">
+                        Delivered
+                    </span>
+
+                    <strong class="stat-value">
+                        0
+                    </strong>
+
+                    <span class="stat-description">
+                        Successfully completed
+                    </span>
+                </article>
+
+            </div>
+
+
+            <div class="dashboard-grid">
+
+                <section class="card chart-card">
+
+                    <div class="card-header">
+                        <div>
+                            <h3>Delivery Status</h3>
+                            <p>
+                                Status distribution will appear here.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="empty-state">
+                        <div class="empty-icon">◌</div>
+
+                        <h4>No delivery data yet</h4>
+
+                        <p>
+                            Delivery statistics will be connected
+                            in the database phase.
+                        </p>
+                    </div>
+
+                </section>
+
+
+                <section class="card">
+
+                    <div class="card-header">
+                        <div>
+                            <h3>Recent Deliveries</h3>
+                            <p>
+                                Your latest delivery activity.
+                            </p>
+                        </div>
+
+                        <a href="/deliveries">
+                            View all
+                        </a>
+                    </div>
+
+                    <div class="empty-state">
+                        <div class="empty-icon">□</div>
+
+                        <h4>No deliveries yet</h4>
+
+                        <p>
+                            Recent deliveries will appear here.
+                        </p>
+                    </div>
+
+                </section>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script
+    src="{{ url_for('static', path='js/app.js') }}"
+></script>
+
+</body>
+</html>
