@@ -1,5 +1,5 @@
 from app.database import Base, engine
-from app.models import Customer, Driver
+from app.models import Customer, Driver, Delivery
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
