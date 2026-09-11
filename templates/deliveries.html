@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Deliveries | Delivery Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-mark">D</div>
+
+            <div>
+                <strong>Delivery</strong>
+                <span>Dashboard</span>
+            </div>
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a href="/dashboard">
+                ▦
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/deliveries" class="active">
+                □
+                <span>Deliveries</span>
+            </a>
+
+            <a href="/customers">
+                ♙
+                <span>Customers</span>
+            </a>
+
+            <a href="/drivers">
+                ♙
+                <span>Drivers</span>
+            </a>
+
+            <a href="/reports">
+                ▥
+                <span>Reports</span>
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <header class="page-header">
+
+            <div>
+                <h1>Deliveries</h1>
+
+                <p>
+                    Manage and track all deliveries.
+                </p>
+            </div>
+
+            <a
+                href="/deliveries/new"
+                class="btn btn-primary"
+            >
+                + New Delivery
+            </a>
+
+        </header>
+
+
+        <section class="card">
+
+            <div class="card-header">
+
+                <div>
+                    <h2>All Deliveries</h2>
+
+                    <p>
+                        {{ deliveries|length }}
+                        {% if deliveries|length == 1 %}delivery{% else %}deliveries{% endif %}
+                    </p>
+                </div>
+
+            </div>
+
+
+            {% if deliveries %}
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Tracking ID</th>
+                            <th>Customer</th>
+                            <th>Destination</th>
+                            <th>Driver</th>
+                            <th>Status</th>
+                            <th>Scheduled</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                    {% for delivery in deliveries %}
+
+                    <tr>
+
+                        <td>
+                            <a href="/deliveries/{{ delivery.id }}">
+                                <strong>
+                                    {{ delivery.tracking_number }}
+                                </strong>
+                            </a>
+                        </td>
+
+
+                        <td>
+
+                            {% if delivery.customer %}
+
+                                {{ delivery.customer.name }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+                            {{ delivery.delivery_address }}
+                        </td>
+
+
+                        <td>
+
+                            {% if delivery.driver %}
+
+                                {{ delivery.driver.name }}
+
+                            {% else %}
+
+                                <span class="muted">
+                                    Unassigned
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="status status-{{ delivery.status|lower|replace('_', '-')|replace(' ', '-') }}">
+
+                                {{ delivery.status|replace('_', ' ')|title }}
+
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            {% if delivery.scheduled_at %}
+
+                                {{ delivery.scheduled_at.strftime("%d %b %Y, %H:%M") }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+
+                            {% if delivery.created_at %}
+
+                                {{ delivery.created_at.strftime("%d %b %Y, %H:%M") }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+
+                            <a
+                                href="/deliveries/{{ delivery.id }}"
+                                class="btn btn-small"
+                            >
+                                View
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            {% else %}
+
+            <div class="empty-state">
+
+                <h3>No deliveries found</h3>
+
+                <p>
+                    There are currently no deliveries in the system.
+                </p>
+
+                <a
+                    href="/deliveries/new"
+                    class="btn btn-primary"
+                >
+                    Create First Delivery
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script
+    src="{{ url_for('static', path='js/app.js') }}"
+></script>
+
+</body>
+</html>

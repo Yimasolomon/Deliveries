@@ -5,10 +5,11 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / "data"
 
-DATABASE_URL = (
-    f"sqlite:///{BASE_DIR / 'data' / 'deliveries.db'}"
-)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+DATABASE_URL = f"sqlite:///{DATA_DIR / 'deliveries.db'}"
 
 
 class Base(DeclarativeBase):
@@ -28,3 +29,12 @@ SessionLocal = sessionmaker(
     autoflush=False,
     autocommit=False,
 )
+
+
+def get_db():
+    db = SessionLocal()
+
+    try:
+        yield db
+    finally:
+        db.close()
