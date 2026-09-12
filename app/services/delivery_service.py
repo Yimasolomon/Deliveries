@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -58,6 +58,27 @@ class DeliveryService:
         "cancelled",
     }
 
+    ALLOWED_TRANSITIONS = {
+        "pending": {
+            "in_transit",
+            "failed",
+            "cancelled",
+        },
+        "in_transit": {
+            "out_for_delivery",
+            "failed",
+            "cancelled",
+        },
+        "out_for_delivery": {
+            "delivered",
+            "failed",
+            "cancelled",
+        },
+        "delivered": set(),
+        "failed": set(),
+        "cancelled": set(),
+    }
+
     def __init__(self, db: Session):
         self.db = db
 
@@ -65,7 +86,7 @@ class DeliveryService:
         self.drivers = DriverRepository(db)
         self.deliveries = DeliveryRepository(db)
         self.status_history = DeliveryStatusHistoryRepository(db)
-
+        
     def create_delivery(
         self,
         *,
@@ -212,19 +233,29 @@ class DeliveryService:
 
         delivery = self.get_delivery(delivery_id)
 
-        if delivery.status == new_status:
+        current_status = delivery.status
+
+        if current_status == new_status:
             raise InvalidStatusError(
                 f"Delivery is already '{new_status}'."
             )
 
-        old_status = delivery.status
+        allowed_statuses = self.ALLOWED_TRANSITIONS.get(
+            current_status,
+            set(),
+        )
+
+        if new_status not in allowed_statuses:
+            raise InvalidStatusError(
+                f"Cannot change delivery status from "
+                f"'{current_status}' to '{new_status}'."
+            )
 
         delivery.status = new_status
 
         if new_status == "delivered":
-            delivery.delivered_at = datetime.utcnow()
-
-        elif old_status == "delivered":
+            delivery.delivered_at = datetime.now(UTC)
+        elif current_status == "delivered":
             delivery.delivered_at = None
 
         history = DeliveryStatusHistory(
