@@ -38,38 +38,6 @@ def seeded_customer_driver(route_client):
 
     return client, session_factory, customer_id, driver_id
 
-@pytest.fixture
-def seeded_customer_driver(route_client):
-    client, session_factory = route_client
-
-    db = session_factory()
-
-    customer = Customer(
-        name="Route Customer",
-        phone="09100001001",
-        email="route@example.com",
-        address="Victoria Island, Lagos",
-    )
-
-    driver = Driver(
-        name="Route Driver",
-        phone="09100002001",
-        vehicle_type="Motorcycle",
-        vehicle_number="ROUTE-001",
-        status="available",
-    )
-
-    db.add_all([customer, driver])
-    db.commit()
-    db.refresh(customer)
-    db.refresh(driver)
-
-    customer_id = customer.id
-    driver_id = driver.id
-
-    db.close()
-
-    return client, session_factory, customer_id, driver_id
 
 
 def test_health_route(route_client):
@@ -107,6 +75,307 @@ def test_deliveries_route_loads(route_client):
 
     assert response.status_code == 200
     assert "Deliveries" in response.text
+
+def test_deliveries_search_by_tracking_number(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    delivery = Delivery(
+        tracking_number="DLV-SEARCH-001",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+        status="pending",
+    )
+
+    db.add(delivery)
+    db.commit()
+    db.close()
+
+    response = client.get(
+        "/deliveries?search=DLV-SEARCH-001"
+    )
+
+    assert response.status_code == 200
+    assert "DLV-SEARCH-001" in response.text
+    assert "No deliveries found" not in response.text
+
+
+def test_deliveries_search_by_customer_name(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    delivery = Delivery(
+        tracking_number="DLV-SEARCH-002",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+        status="pending",
+    )
+
+    db.add(delivery)
+    db.commit()
+    db.close()
+
+    response = client.get(
+        "/deliveries?search=Route%20Customer"
+    )
+
+    assert response.status_code == 200
+    assert "DLV-SEARCH-002" in response.text
+    assert "Route Customer" in response.text
+
+
+def test_deliveries_search_by_address(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    delivery = Delivery(
+        tracking_number="DLV-SEARCH-003",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Unique Pickup Address",
+        delivery_address="Unique Delivery Address",
+        status="pending",
+    )
+
+    db.add(delivery)
+    db.commit()
+    db.close()
+
+    response = client.get(
+        "/deliveries?search=Unique%20Delivery%20Address"
+    )
+
+    assert response.status_code == 200
+    assert "DLV-SEARCH-003" in response.text
+    assert "Unique Delivery Address" in response.text
+
+
+def test_deliveries_status_filter(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    pending_delivery = Delivery(
+        tracking_number="DLV-FILTER-PENDING",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+        status="pending",
+    )
+
+    delivered_delivery = Delivery(
+        tracking_number="DLV-FILTER-DELIVERED",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Yaba",
+        delivery_address="Surulere",
+        status="delivered",
+    )
+
+    db.add_all([
+        pending_delivery,
+        delivered_delivery,
+    ])
+    db.commit()
+    db.close()
+
+    response = client.get(
+        "/deliveries?status=delivered"
+    )
+
+    assert response.status_code == 200
+    assert "DLV-FILTER-DELIVERED" in response.text
+    assert "DLV-FILTER-PENDING" not in response.text
+
+
+def test_deliveries_search_and_status_filter(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    matching_delivery = Delivery(
+        tracking_number="DLV-COMBINED-001",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Ikeja",
+        delivery_address="Combined Search Address",
+        status="delivered",
+    )
+
+    wrong_status = Delivery(
+        tracking_number="DLV-COMBINED-002",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Ikeja",
+        delivery_address="Combined Search Address",
+        status="pending",
+    )
+
+    db.add_all([
+        matching_delivery,
+        wrong_status,
+    ])
+    db.commit()
+    db.close()
+
+    response = client.get(
+        "/deliveries"
+        "?search=Combined%20Search%20Address"
+        "&status=delivered"
+    )
+
+    assert response.status_code == 200
+    assert "DLV-COMBINED-001" in response.text
+    assert "DLV-COMBINED-002" not in response.text
+
+
+def test_deliveries_pagination(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    for number in range(1, 13):
+        db.add(
+            Delivery(
+                tracking_number=f"DLV-PAGE-{number:03d}",
+                customer_id=customer_id,
+                driver_id=driver_id,
+                pickup_address="Pagination Pickup",
+                delivery_address="Pagination Delivery",
+                status="pending",
+            )
+        )
+
+    db.commit()
+    db.close()
+
+    first_page = client.get(
+        "/deliveries?search=DLV-PAGE-"
+    )
+
+    assert first_page.status_code == 200
+
+    # Page 1 contains the 10 newest matching deliveries.
+    assert "DLV-PAGE-012" in first_page.text
+    assert "DLV-PAGE-003" in first_page.text
+    assert "DLV-PAGE-002" not in first_page.text
+    assert "DLV-PAGE-001" not in first_page.text
+
+    second_page = client.get(
+        "/deliveries?search=DLV-PAGE-&page=2"
+    )
+
+    assert second_page.status_code == 200
+
+    # Page 2 contains the remaining two deliveries.
+    assert "DLV-PAGE-002" in second_page.text
+    assert "DLV-PAGE-001" in second_page.text
+
+def test_deliveries_pagination_preserves_filters(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    for number in range(1, 13):
+        db.add(
+            Delivery(
+                tracking_number=f"DLV-FILTER-PAGE-{number:03d}",
+                customer_id=customer_id,
+                driver_id=driver_id,
+                pickup_address="Pagination Pickup",
+                delivery_address="Pagination Delivery",
+                status="pending",
+            )
+        )
+
+    db.commit()
+    db.close()
+
+    response = client.get(
+        "/deliveries"
+        "?search=Pagination%20Delivery"
+        "&status=pending"
+        "&page=2"
+    )
+
+    assert response.status_code == 200
+
+    # The filter must still be present in pagination links.
+    assert (
+        "search=Pagination%20Delivery"
+        in response.text
+        or "search=Pagination+Delivery"
+        in response.text
+    )
+
+    assert "status=pending" in response.text
+
+
+def test_deliveries_page_beyond_last_page_uses_last_page(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    db.add(
+        Delivery(
+            tracking_number="DLV-LAST-PAGE-001",
+            customer_id=customer_id,
+            driver_id=driver_id,
+            pickup_address="Ikeja",
+            delivery_address="Lekki",
+            status="pending",
+        )
+    )
+
+    db.commit()
+    db.close()
+
+    response = client.get(
+        "/deliveries?page=999"
+    )
+
+    assert response.status_code == 200
+    assert "DLV-LAST-PAGE-001" in response.text
 
 
 def test_new_delivery_form_loads(seeded_customer_driver):
@@ -338,6 +607,104 @@ def test_invalid_delivery_status_route_returns_400(
     assert response.status_code == 400
     assert "Invalid" in response.text
 
+def test_delete_delivery_route_cancels_delivery(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    delivery = Delivery(
+        tracking_number="DLV-CANCEL-ROUTE-001",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+        status="pending",
+    )
+
+    db.add(delivery)
+    db.commit()
+    db.refresh(delivery)
+
+    delivery_id = delivery.id
+
+    db.add(
+        DeliveryStatusHistory(
+            delivery_id=delivery_id,
+            status="pending",
+        )
+    )
+
+    db.commit()
+    db.close()
+
+    response = client.post(
+        f"/deliveries/{delivery_id}/delete",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/deliveries"
+
+    db = session_factory()
+
+    cancelled = db.get(Delivery, delivery_id)
+
+    assert cancelled is not None
+    assert cancelled.status == "cancelled"
+
+    history = (
+        db.query(DeliveryStatusHistory)
+        .filter(
+            DeliveryStatusHistory.delivery_id == delivery_id
+        )
+        .order_by(DeliveryStatusHistory.id)
+        .all()
+    )
+
+    assert len(history) == 2
+    assert history[0].status == "pending"
+    assert history[1].status == "cancelled"
+    assert history[1].note == "Delivery cancelled by user."
+
+    db.close()
+
+
+def test_delete_delivery_route_rejects_terminal_delivery(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    delivery = Delivery(
+        tracking_number="DLV-CANCEL-ROUTE-002",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+        status="delivered",
+    )
+
+    db.add(delivery)
+    db.commit()
+    db.refresh(delivery)
+
+    delivery_id = delivery.id
+
+    db.close()
+
+    response = client.post(
+        f"/deliveries/{delivery_id}/delete"
+    )
+
+    assert response.status_code == 400
+    assert "cannot be cancelled" in response.text.lower()
 
 def test_customers_route_loads(route_client):
     client, _ = route_client
@@ -346,7 +713,6 @@ def test_customers_route_loads(route_client):
 
     assert response.status_code == 200
     assert "Customers" in response.text
-
 
 def test_create_customer_route_persists_customer(route_client):
     client, session_factory = route_client
