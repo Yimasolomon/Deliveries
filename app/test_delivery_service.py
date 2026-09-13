@@ -317,3 +317,219 @@ def test_cancel_delivery_cannot_cancel_already_cancelled_delivery(db):
         service.cancel_delivery(
             delivery_id=delivery.id,
         )
+
+        cat >> app/test_delivery_service.py <<'EOF'
+
+
+def test_update_status_allows_valid_transition(db):
+    service = DeliveryService(db)
+
+    delivery = create_delivery(db, status="pending")
+
+    updated = service.update_status(
+        delivery_id=delivery.id,
+        new_status="in_transit",
+        note="Driver picked up the delivery.",
+    )
+
+    assert updated.status == "in_transit"
+
+    history = service.get_status_history(delivery.id)
+
+    assert history[-1].status == "in_transit"
+    assert history[-1].note == "Driver picked up the delivery."
+
+
+def test_update_status_allows_full_valid_transition_chain(db):
+    service = DeliveryService(db)
+
+    delivery = create_delivery(db, status="pending")
+
+    service.update_status(
+        delivery.id,
+        "in_transit",
+    )
+
+    service.update_status(
+        delivery.id,
+        "out_for_delivery",
+    )
+
+    updated = service.update_status(
+        delivery.id,
+        "delivered",
+        note="Delivered to customer.",
+    )
+
+    assert updated.status == "delivered"
+    assert updated.delivered_at is not None
+
+    history = service.get_status_history(delivery.id)
+
+    assert [entry.status for entry in history] == [
+        "in_transit",
+        "out_for_delivery",
+        "delivered",
+    ]
+
+    assert history[-1].note == "Delivered to customer."
+
+
+@pytest.mark.parametrize(
+    ("current_status", "new_status"),
+    [
+        ("pending", "out_for_delivery"),
+        ("pending", "delivered"),
+        ("in_transit", "delivered"),
+        ("out_for_delivery", "pending"),
+    ],
+)
+def test_update_status_rejects_invalid_transition(
+    db,
+    current_status,
+    new_status,
+):
+    service = DeliveryService(db)
+
+    delivery = create_delivery(
+        db,
+        status=current_status,
+    )
+
+    with pytest.raises(InvalidStatusError):
+        service.update_status(
+            delivery_id=delivery.id,
+            new_status=new_status,
+        )
+
+    db.refresh(delivery)
+
+    assert delivery.status == current_status
+
+
+@pytest.mark.parametrize(
+    "terminal_status",
+    [
+        "delivered",
+        "failed",
+        "cancelled",
+    ],
+)
+def test_update_status_rejects_changes_from_terminal_status(
+    db,
+    terminal_status,
+):
+    service = DeliveryService(db)
+
+    delivery = create_delivery(
+        db,
+        status=terminal_status,
+    )
+
+    with pytest.raises(InvalidStatusError):
+        service.update_status(
+            delivery_id=delivery.id,
+            new_status="pending",
+        )
+
+    db.refresh(delivery)
+
+    assert delivery.status == terminal_status
+
+
+def test_update_status_rejects_same_status(db):
+    service = DeliveryService(db)
+
+    delivery = create_delivery(
+        db,
+        status="pending",
+    )
+
+    with pytest.raises(InvalidStatusError):
+        service.update_status(
+            delivery_id=delivery.id,
+            new_status="pending",
+        )
+
+    db.refresh(delivery)
+
+    assert delivery.status == "pending"
+
+
+def test_update_status_rejects_unknown_status(db):
+    service = DeliveryService(db)
+
+    delivery = create_delivery(db)
+
+    with pytest.raises(InvalidStatusError):
+        service.update_status(
+            delivery_id=delivery.id,
+            new_status="unknown_status",
+        )
+
+    db.refresh(delivery)
+
+    assert delivery.status == "pending"
+
+
+def test_update_status_normalizes_status_and_note(db):
+    service = DeliveryService(db)
+
+    delivery = create_delivery(db)
+
+    updated = service.update_status(
+        delivery_id=delivery.id,
+        new_status=" IN_TRANSIT ",
+        note="  Driver picked up package.  ",
+    )
+
+    assert updated.status == "in_transit"
+
+    history = service.get_status_history(delivery.id)
+
+    assert history[-1].status == "in_transit"
+    assert history[-1].note == "Driver picked up package."
+
+
+def test_update_status_allows_failed_transition(db):
+    service = DeliveryService(db)
+
+    delivery = create_delivery(
+        db,
+        status="in_transit",
+    )
+
+    updated = service.update_status(
+        delivery_id=delivery.id,
+        new_status="failed",
+        note="Customer was unavailable.",
+    )
+
+    assert updated.status == "failed"
+
+    history = service.get_status_history(delivery.id)
+
+    assert history[-1].status == "failed"
+    assert history[-1].note == "Customer was unavailable."
+
+
+def test_update_status_allows_cancellation_from_active_delivery(db):
+    service = DeliveryService(db)
+
+    delivery = create_delivery(
+        db,
+        status="out_for_delivery",
+    )
+
+    updated = service.update_status(
+        delivery_id=delivery.id,
+        new_status="cancelled",
+        note="Customer cancelled the order.",
+    )
+
+    assert updated.status == "cancelled"
+
+    history = service.get_status_history(delivery.id)
+
+    assert history[-1].status == "cancelled"
+    assert history[-1].note == "Customer cancelled the order."
