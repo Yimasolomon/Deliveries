@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>{{ page_title }} - Delivery Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="container">
+        <h1>Delivery Tracking Dashboard</h1>
+
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/deliveries">Deliveries</a>
+            <a href="/customers">Customers</a>
+            <a href="/drivers">Drivers</a>
+            <a href="/reports">Reports</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+
+    <div class="page-header">
+        <div>
+            <h2>Customers</h2>
+            <p>Manage delivery customers.</p>
+        </div>
+
+        <a
+            href="/customers/new"
+            class="button primary"
+        >
+            + New Customer
+        </a>
+    </div>
+
+    <section class="card">
+
+        <form
+            method="get"
+            action="/customers"
+            class="filters"
+        >
+            <div class="form-group">
+                <label for="search">Search</label>
+
+                <input
+                    type="text"
+                    id="search"
+                    name="search"
+                    value="{{ search }}"
+                    placeholder="Name, phone, email, address..."
+                >
+            </div>
+
+            <div class="form-actions">
+                <button
+                    type="submit"
+                    class="button primary"
+                >
+                    Search
+                </button>
+
+                <a
+                    href="/customers"
+                    class="button secondary"
+                >
+                    Clear
+                </a>
+            </div>
+        </form>
+
+    </section>
+
+    <section class="card">
+
+        <h3>All Customers</h3>
+
+        <p>
+            {{ customers|length }} customers
+        </p>
+
+        {% if customers %}
+
+        <div class="table-responsive">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for customer in customers %}
+
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ customer.name }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ customer.phone }}
+                        </td>
+
+                        <td>
+                            {{ customer.email or "—" }}
+                        </td>
+
+                        <td>
+                            {{ customer.address }}
+                        </td>
+
+                        <td>
+                            <a
+                                href="/customers/{{ customer.id }}"
+                                class="button small"
+                            >
+                                View
+                            </a>
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <p>No customers found.</p>
+
+        {% endif %}
+
+    </section>
+
+</main>
+
+<script
+    src="{{ url_for('static', path='js/app.js') }}"
+></script>
+
+</body>
+</html>

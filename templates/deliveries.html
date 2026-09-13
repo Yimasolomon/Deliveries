@@ -84,19 +84,95 @@
 
         <section class="card">
 
-            <div class="card-header">
+<div class="card-header">
 
-                <div>
-                    <h2>All Deliveries</h2>
+    <div>
+        <h2>All Deliveries</h2>
 
-                    <p>
-                        {{ deliveries|length }}
-                        {% if deliveries|length == 1 %}delivery{% else %}deliveries{% endif %}
-                    </p>
-                </div>
+        <p>
+            {{ deliveries|length }}
+            {% if deliveries|length == 1 %}delivery{% else %}deliveries{% endif %}
+        </p>
+    </div>
 
-            </div>
+</div>
 
+
+<form
+    method="get"
+    action="/deliveries"
+    class="filters"
+>
+
+    <div class="form-group">
+
+        <label for="search">
+            Search
+        </label>
+
+        <input
+            type="text"
+            id="search"
+            name="search"
+            value="{{ search }}"
+            placeholder="Tracking ID, customer, phone, address..."
+        >
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label for="status">
+            Status
+        </label>
+
+        <select
+            id="status"
+            name="status"
+        >
+
+            <option value="">
+                All statuses
+            </option>
+
+            {% for delivery_status in statuses %}
+
+            <option
+                value="{{ delivery_status }}"
+                {% if selected_status == delivery_status %}
+                selected
+                {% endif %}
+            >
+                {{ delivery_status|replace('_', ' ')|title }}
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+    </div>
+
+
+    <div class="form-actions">
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+            Search
+        </button>
+
+        <a
+            href="/deliveries"
+            class="btn btn-small"
+        >
+            Clear
+        </a>
+
+    </div>
+
+</form>     
 
             {% if deliveries %}
 
@@ -173,15 +249,16 @@
 
 
                         <td>
-
-                            <span class="status status-{{ delivery.status|lower|replace('_', '-')|replace(' ', '-') }}">
-
+                            <span class="status {{ delivery.status }}">
                                 {{ delivery.status|replace('_', ' ')|title }}
-
                             </span>
 
+                            {% if delivery.id in delayed_delivery_ids %}
+                            <span class="status delayed">
+                                Delayed
+                            </span>
+                            {% endif %}
                         </td>
-
 
                         <td>
 

@@ -214,16 +214,10 @@ class DeliveryService:
 
     def update_status(
         self,
-        *,
         delivery_id: int,
         new_status: str,
         note: str | None = None,
     ) -> Delivery:
-        """
-        Update delivery status and create a status-history record
-        in one database transaction.
-        """
-
         new_status = new_status.strip().lower()
 
         if new_status not in self.VALID_STATUSES:
@@ -247,24 +241,24 @@ class DeliveryService:
 
         if new_status not in allowed_statuses:
             raise InvalidStatusError(
-                f"Cannot change delivery status from "
-                f"'{current_status}' to '{new_status}'."
+                f"Invalid status transition: cannot change delivery status "
+                f"from '{current_status}' to '{new_status}'."
             )
 
-        delivery.status = new_status
-
-        if new_status == "delivered":
-            delivery.delivered_at = datetime.now(UTC)
-        elif current_status == "delivered":
-            delivery.delivered_at = None
-
-        history = DeliveryStatusHistory(
-            delivery_id=delivery.id,
-            status=new_status,
-            note=note.strip() if note else None,
-        )
-
         try:
+            delivery.status = new_status
+
+            if new_status == "delivered":
+                delivery.delivered_at = datetime.now(UTC)
+            elif current_status == "delivered":
+                delivery.delivered_at = None
+
+            history = DeliveryStatusHistory(
+                delivery_id=delivery.id,
+                status=new_status,
+                note=note.strip() if note else None,
+            )
+
             self.status_history.add(history)
 
             self.db.commit()
@@ -283,3 +277,177 @@ class DeliveryService:
         except Exception:
             self.db.rollback()
             raise
+
+    def is_delayed(
+        self,
+        delivery: Delivery,
+        *,
+        now: datetime | None = None,
+    ) -> bool:
+        """
+        Return True when a delivery is past its scheduled time
+        and is still active.
+        """
+
+        if delivery.scheduled_at is None:
+            return False
+
+        if delivery.status in {
+            "delivered",
+            "failed",
+            "cancelled",
+        }:
+            return False
+
+        if now is None:
+            now = datetime.now(UTC)
+
+        scheduled_at = delivery.scheduled_at
+
+        # SQLite may return naive datetimes even when the application
+        # originally stored an aware UTC datetime.
+        if scheduled_at.tzinfo is None:
+            scheduled_at = scheduled_at.replace(tzinfo=UTC)
+
+        if now.tzinfo is None:
+            now = now.replace(tzinfo=UTC)
+
+        return now > scheduled_at
+
+    def update_delivery(
+        self,
+        *,
+        delivery_id: int,
+        customer_id: int,
+        driver_id: int | None,
+        pickup_address: str,
+        delivery_address: str,
+        scheduled_at: datetime | None = None,
+    ) -> Delivery:
+        """
+        Update editable delivery details.
+
+        Tracking number and delivery status are intentionally
+        not changed here.
+        """
+
+        pickup_address = pickup_address.strip()
+        delivery_address = delivery_address.strip()
+
+        if not pickup_address:
+            raise InvalidDeliveryDataError(
+                "Pickup address is required."
+            )
+
+        if not delivery_address:
+            raise InvalidDeliveryDataError(
+                "Delivery address is required."
+            )
+
+        if customer_id <= 0:
+            raise InvalidDeliveryDataError(
+                "A valid customer is required."
+            )
+
+        if driver_id is not None and driver_id <= 0:
+            raise InvalidDeliveryDataError(
+                "Invalid driver."
+            )
+
+        delivery = self.get_delivery(delivery_id)
+
+        customer = self.customers.get_by_id(customer_id)
+
+        if customer is None:
+            raise CustomerNotFoundError(
+                f"Customer {customer_id} was not found."
+            )
+
+        driver = None
+
+        if driver_id is not None:
+            driver = self.drivers.get_by_id(driver_id)
+
+            if driver is None:
+                raise DriverNotFoundError(
+                    f"Driver {driver_id} was not found."
+                )
+
+            # Allow the delivery's current driver even if their
+            # status is no longer "available".
+            if (
+                driver.status != "available"
+                and driver.id != delivery.driver_id
+            ):
+                raise DriverUnavailableError(
+                    f"Driver '{driver.name}' is not available."
+                )
+
+        delivery.customer_id = customer.id
+        delivery.driver_id = driver.id if driver else None
+        delivery.pickup_address = pickup_address
+        delivery.delivery_address = delivery_address
+        delivery.scheduled_at = scheduled_at
+
+        try:
+            self.db.commit()
+            self.db.refresh(delivery)
+
+            return delivery
+
+        except IntegrityError:
+            self.db.rollback()
+
+            raise DeliveryServiceError(
+                "The delivery could not be updated "
+                "because of a database constraint."
+            )
+
+        except Exception:
+            self.db.rollback()
+            raise
+
+    def cancel_delivery(
+        self,
+        *,
+        delivery_id: int,
+        note: str | None = None,
+    ) -> Delivery:
+        """
+        Cancel a delivery while preserving its history.
+        """
+
+        delivery = self.get_delivery(delivery_id)
+
+        if delivery.status in {
+            "delivered",
+            "failed",
+            "cancelled",
+        }:
+            raise InvalidStatusError(
+                f"Delivery cannot be cancelled from "
+                f"'{delivery.status}' status."
+            )
+
+        return self.update_status(
+            delivery_id=delivery_id,
+            new_status="cancelled",
+            note=note or "Delivery cancelled.",
+        )
+
+
+        if delivery.status in {
+            "delivered",
+            "failed",
+            "cancelled",
+        }:
+            raise InvalidStatusError(
+                f"Delivery cannot be cancelled from "
+                f"'{delivery.status}' status."
+            )
+
+        return self.update_status(
+            delivery_id=delivery_id,
+            new_status="cancelled",
+            note=note or "Delivery cancelled.",
+        )

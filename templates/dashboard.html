@@ -6,13 +6,11 @@
 
     <title>{{ page_title or "Dashboard" }} - Delivery Dashboard</title>
 
-    <!-- Existing project stylesheet -->
     <link
         rel="stylesheet"
         href="{{ url_for('static', path='css/style.css') }}"
     >
 
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -20,31 +18,17 @@
 
 <div class="app-container">
 
-    <!-- =========================
-         SIDEBAR
-    ========================== -->
     <aside class="sidebar">
 
         <div class="sidebar-header">
-
-            <div class="brand-icon">
-                D
-            </div>
+            <div class="brand-icon">D</div>
 
             <div class="brand-text">
-                <div class="brand-name">
-                    Delivery
-                </div>
-
-                <div class="brand-subtitle">
-                    Dashboard
-                </div>
+                <div class="brand-name">Delivery</div>
+                <div class="brand-subtitle">Dashboard</div>
             </div>
-
         </div>
 
-
-        <!-- Navigation -->
         <nav class="sidebar-nav">
 
             <a href="/dashboard" class="nav-item active">
@@ -77,12 +61,8 @@
     </aside>
 
 
-    <!-- =========================
-         MAIN CONTENT
-    ========================== -->
     <main class="main-content">
 
-        <!-- Top header -->
         <header class="top-header">
 
             <div>
@@ -96,12 +76,8 @@
         </header>
 
 
-        <!-- =========================
-             PAGE CONTENT
-        ========================== -->
         <section class="dashboard-content">
 
-            <!-- Overview heading -->
             <div class="page-heading">
 
                 <div>
@@ -119,132 +95,144 @@
             </div>
 
 
-            <!-- =========================
-                 STAT CARDS
-            ========================== -->
+            <!-- DELIVERY STATISTICS -->
+
             <div class="stats-grid">
 
-                <!-- Total -->
                 <div class="stat-card">
-
-                    <div class="stat-label">
-                        Total Deliveries
-                    </div>
-
-                    <div class="stat-value">
-                        {{ total }}
-                    </div>
-
+                    <div class="stat-label">Total Deliveries</div>
+                    <div class="stat-value">{{ total }}</div>
                     <div class="stat-description">
                         All deliveries
                     </div>
-
                 </div>
 
-
-                <!-- Pending -->
                 <div class="stat-card">
-
-                    <div class="stat-label">
-                        Pending
-                    </div>
-
-                    <div class="stat-value">
-                        {{ pending }}
-                    </div>
-
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value">{{ pending }}</div>
                     <div class="stat-description">
                         Awaiting pickup
                     </div>
-
                 </div>
 
-
-                <!-- In Transit -->
                 <div class="stat-card">
-
-                    <div class="stat-label">
-                        In Transit
-                    </div>
-
-                    <div class="stat-value">
-                        {{ in_transit }}
-                    </div>
-
+                    <div class="stat-label">In Transit</div>
+                    <div class="stat-value">{{ in_transit }}</div>
                     <div class="stat-description">
                         Currently moving
                     </div>
-
                 </div>
 
-
-                <!-- Out for Delivery -->
                 <div class="stat-card">
-
-                    <div class="stat-label">
-                        Out for Delivery
-                    </div>
-
-                    <div class="stat-value">
-                        {{ out_for_delivery }}
-                    </div>
-
+                    <div class="stat-label">Out for Delivery</div>
+                    <div class="stat-value">{{ out_for_delivery }}</div>
                     <div class="stat-description">
                         Near destination
                     </div>
-
                 </div>
 
-
-                <!-- Delivered -->
                 <div class="stat-card">
-
-                    <div class="stat-label">
-                        Delivered
-                    </div>
-
-                    <div class="stat-value">
-                        {{ delivered }}
-                    </div>
-
+                    <div class="stat-label">Delivered</div>
+                    <div class="stat-value">{{ delivered }}</div>
                     <div class="stat-description">
                         Successfully completed
                     </div>
-
                 </div>
 
-
-                <!-- Failed -->
                 <div class="stat-card">
-
-                    <div class="stat-label">
-                        Failed
-                    </div>
-
-                    <div class="stat-value">
-                        {{ failed }}
-                    </div>
-
+                    <div class="stat-label">Failed</div>
+                    <div class="stat-value">{{ failed }}</div>
                     <div class="stat-description">
                         Delivery attempts failed
                     </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Cancelled</div>
+                    <div class="stat-value">{{ cancelled }}</div>
+                    <div class="stat-description">
+                        Cancelled deliveries
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Delayed</div>
+                    <div class="stat-value">{{ delayed }}</div>
+                    <div class="stat-description">
+                        Past estimated delivery
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- PEOPLE / OPERATIONS SUMMARY -->
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Customers
+                    </div>
+
+                    <div class="stat-value">
+                        {{ total_customers }}
+                    </div>
+
+                    <div class="stat-description">
+                        Registered customers
+                    </div>
 
                 </div>
 
 
-                <!-- Delayed -->
                 <div class="stat-card">
 
                     <div class="stat-label">
-                        Delayed
+                        Total Drivers
                     </div>
 
                     <div class="stat-value">
-                        {{ delayed }}
+                        {{ total_drivers }}
                     </div>
 
                     <div class="stat-description">
-                        Past estimated delivery
+                        Registered drivers
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Available Drivers
+                    </div>
+
+                    <div class="stat-value">
+                        {{ available_drivers }}
+                    </div>
+
+                    <div class="stat-description">
+                        Ready for delivery
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Busy Drivers
+                    </div>
+
+                    <div class="stat-value">
+                        {{ busy_drivers }}
+                    </div>
+
+                    <div class="stat-description">
+                        Currently assigned
                     </div>
 
                 </div>
@@ -252,13 +240,10 @@
             </div>
 
 
-            <!-- =========================
-                 CHART + QUICK SUMMARY
-            ========================== -->
+            <!-- CHART + STATUS SUMMARY -->
+
             <div class="dashboard-grid">
 
-
-                <!-- Delivery Status -->
                 <section class="dashboard-card">
 
                     <div class="card-header">
@@ -273,17 +258,13 @@
 
                     </div>
 
-
                     <div class="chart-container">
-
                         <canvas id="deliveryStatusChart"></canvas>
-
                     </div>
 
                 </section>
 
 
-                <!-- Status Summary -->
                 <section class="dashboard-card">
 
                     <div class="card-header">
@@ -292,7 +273,7 @@
                             <h3>Status Summary</h3>
 
                             <p>
-                                Overview of your current delivery workload.
+                                Current delivery workload.
                             </p>
                         </div>
 
@@ -302,86 +283,58 @@
                     <div class="status-list">
 
                         <div class="status-row">
-
                             <div class="status-name">
                                 <span class="status-dot pending"></span>
                                 Pending
                             </div>
-
-                            <strong>
-                                {{ pending }}
-                            </strong>
-
+                            <strong>{{ pending }}</strong>
                         </div>
 
-
                         <div class="status-row">
-
                             <div class="status-name">
                                 <span class="status-dot in-transit"></span>
                                 In Transit
                             </div>
-
-                            <strong>
-                                {{ in_transit }}
-                            </strong>
-
+                            <strong>{{ in_transit }}</strong>
                         </div>
 
-
                         <div class="status-row">
-
                             <div class="status-name">
                                 <span class="status-dot out-for-delivery"></span>
                                 Out for Delivery
                             </div>
-
-                            <strong>
-                                {{ out_for_delivery }}
-                            </strong>
-
+                            <strong>{{ out_for_delivery }}</strong>
                         </div>
 
-
                         <div class="status-row">
-
                             <div class="status-name">
                                 <span class="status-dot delivered"></span>
                                 Delivered
                             </div>
-
-                            <strong>
-                                {{ delivered }}
-                            </strong>
-
+                            <strong>{{ delivered }}</strong>
                         </div>
 
-
                         <div class="status-row">
-
                             <div class="status-name">
                                 <span class="status-dot failed"></span>
                                 Failed
                             </div>
-
-                            <strong>
-                                {{ failed }}
-                            </strong>
-
+                            <strong>{{ failed }}</strong>
                         </div>
 
+                        <div class="status-row">
+                            <div class="status-name">
+                                Cancelled
+                            </div>
+                            <strong>{{ cancelled }}</strong>
+                        </div>
 
                         <div class="status-row">
-
                             <div class="status-name">
                                 <span class="status-dot delayed"></span>
                                 Delayed
                             </div>
-
-                            <strong>
-                                {{ delayed }}
-                            </strong>
-
+                            <strong>{{ delayed }}</strong>
                         </div>
 
                     </div>
@@ -391,9 +344,136 @@
             </div>
 
 
-            <!-- =========================
-                 RECENT DELIVERIES
-            ========================== -->
+            <!-- DELAYED DELIVERIES -->
+
+            <section class="dashboard-card recent-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Delayed Deliveries</h3>
+
+                        <p>
+                            Deliveries currently past their estimated delivery time.
+                        </p>
+                    </div>
+
+                    <a href="/deliveries" class="view-all">
+                        View all
+                    </a>
+
+                </div>
+
+
+                {% if delayed_deliveries %}
+
+                <div class="table-wrapper">
+
+                    <table class="deliveries-table">
+
+                        <thead>
+                            <tr>
+                                <th>Tracking ID</th>
+                                <th>Customer</th>
+                                <th>Destination</th>
+                                <th>Driver</th>
+                                <th>Status</th>
+                                <th>Estimated Delivery</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for delivery in delayed_deliveries[:10] %}
+
+                            <tr>
+
+                                <td>
+                                    <a
+                                        href="/deliveries/{{ delivery.id }}"
+                                        class="tracking-link"
+                                    >
+                                        {{ delivery.tracking_number }}
+                                    </a>
+                                </td>
+
+                                <td>
+                                    {% if delivery.customer %}
+                                        {{ delivery.customer.name }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ delivery.delivery_address }}
+                                </td>
+
+                                <td>
+                                    {% if delivery.driver %}
+                                        {{ delivery.driver.name }}
+                                    {% else %}
+                                        <span class="unassigned">
+                                            Unassigned
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <span class="status-badge status-{{ delivery.status }}">
+                                        {{ delivery.status.replace("_", " ").title() }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {% if delivery.scheduled_at %}
+                                        {{ delivery.scheduled_at.strftime("%d %b %Y, %H:%M") }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <a
+                                        href="/deliveries/{{ delivery.id }}"
+                                        class="action-link"
+                                    >
+                                        View
+                                    </a>
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                {% else %}
+
+                <div class="empty-state">
+
+                    <h4>
+                        No delayed deliveries
+                    </h4>
+
+                    <p>
+                        All scheduled deliveries are currently on time.
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+            </section>
+
+
+            <!-- RECENT DELIVERIES -->
+
             <section class="dashboard-card recent-card">
 
                 <div class="card-header">
@@ -434,51 +514,34 @@
 
                         </thead>
 
-
                         <tbody>
 
                             {% for delivery in recent_deliveries %}
 
                             <tr>
 
-                                <!-- Tracking -->
                                 <td>
-
                                     <a
                                         href="/deliveries/{{ delivery.id }}"
                                         class="tracking-link"
                                     >
                                         {{ delivery.tracking_number }}
                                     </a>
-
                                 </td>
 
-
-                                <!-- Customer -->
                                 <td>
-
                                     {% if delivery.customer %}
                                         {{ delivery.customer.name }}
                                     {% else %}
                                         —
                                     {% endif %}
-
                                 </td>
 
-
-                                <!-- Destination -->
                                 <td>
-
-                                    <span class="destination">
-                                        {{ delivery.delivery_address }}
-                                    </span>
-
+                                    {{ delivery.delivery_address }}
                                 </td>
 
-
-                                <!-- Driver -->
                                 <td>
-
                                     {% if delivery.driver %}
                                         {{ delivery.driver.name }}
                                     {% else %}
@@ -486,66 +549,37 @@
                                             Unassigned
                                         </span>
                                     {% endif %}
-
                                 </td>
 
-
-                                <!-- Status -->
                                 <td>
-
-                                    {% set status = delivery.status %}
-
-                                    <span
-                                        class="status-badge status-{{ status }}"
-                                    >
-                                        {{ status.replace("_", " ").title() }}
+                                    <span class="status-badge status-{{ delivery.status }}">
+                                        {{ delivery.status.replace("_", " ").title() }}
                                     </span>
-
                                 </td>
 
-
-                                <!-- Estimated delivery -->
                                 <td>
-
                                     {% if delivery.scheduled_at %}
-
                                         {{ delivery.scheduled_at.strftime("%d %b %Y, %H:%M") }}
-
                                     {% else %}
-
                                         —
-
                                     {% endif %}
-
                                 </td>
 
-
-                                <!-- Created -->
                                 <td>
-
                                     {% if delivery.created_at %}
-
                                         {{ delivery.created_at.strftime("%d %b %Y, %H:%M") }}
-
                                     {% else %}
-
                                         —
-
                                     {% endif %}
-
                                 </td>
 
-
-                                <!-- Action -->
                                 <td>
-
                                     <a
                                         href="/deliveries/{{ delivery.id }}"
                                         class="action-link"
                                     >
                                         View
                                     </a>
-
                                 </td>
 
                             </tr>
@@ -560,12 +594,7 @@
 
                 {% else %}
 
-                <!-- Empty state -->
                 <div class="empty-state">
-
-                    <div class="empty-icon">
-                        □
-                    </div>
 
                     <h4>
                         No deliveries yet
@@ -595,9 +624,6 @@
 </div>
 
 
-<!-- =========================
-     MOBILE MENU BUTTON
-========================== -->
 <button
     id="menuButton"
     class="mobile-menu-button"
@@ -608,93 +634,78 @@
 </button>
 
 
-<!-- Existing JavaScript -->
 <script src="{{ url_for('static', path='js/app.js') }}"></script>
 
 
-<!-- =========================
-     CHART SCRIPT
-========================== -->
 <script>
 
-    const statusLabels = [
-        "Pending",
-        "In Transit",
-        "Out for Delivery",
-        "Delivered",
-        "Failed"
-    ];
+const statusLabels = [
+    "Pending",
+    "In Transit",
+    "Out for Delivery",
+    "Delivered",
+    "Failed",
+    "Cancelled"
+];
 
-    const statusValues = [
-        {{ pending }},
-        {{ in_transit }},
-        {{ out_for_delivery }},
-        {{ delivered }},
-        {{ failed }}
-    ];
+const statusValues = [
+    {{ pending }},
+    {{ in_transit }},
+    {{ out_for_delivery }},
+    {{ delivered }},
+    {{ failed }},
+    {{ cancelled }}
+];
 
+const chartCanvas = document.getElementById(
+    "deliveryStatusChart"
+);
 
-    const chartCanvas = document.getElementById(
-        "deliveryStatusChart"
-    );
+if (chartCanvas) {
 
+    new Chart(chartCanvas, {
 
-    if (chartCanvas) {
+        type: "doughnut",
 
-        new Chart(chartCanvas, {
+        data: {
 
-            type: "doughnut",
+            labels: statusLabels,
 
-            data: {
+            datasets: [
+                {
+                    data: statusValues,
+                    borderWidth: 0
+                }
+            ]
 
-                labels: statusLabels,
+        },
 
-                datasets: [
+        options: {
 
-                    {
-                        data: statusValues,
+            responsive: true,
 
-                        borderWidth: 0
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+                    position: "bottom",
+
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
                     }
+                },
 
-                ]
+                tooltip: {
 
-            },
+                    callbacks: {
 
-            options: {
+                        label: function(context) {
 
-                responsive: true,
+                            const value = context.raw;
 
-                maintainAspectRatio: false,
-
-                plugins: {
-
-                    legend: {
-
-                        position: "bottom",
-
-                        labels: {
-
-                            padding: 20,
-
-                            usePointStyle: true
-
-                        }
-
-                    },
-
-                    tooltip: {
-
-                        callbacks: {
-
-                            label: function(context) {
-
-                                const value = context.raw;
-
-                                return " " + value + " deliveries";
-
-                            }
-
+                            return " " + value + " deliveries";
                         }
 
                     }
@@ -703,9 +714,11 @@
 
             }
 
-        });
+        }
 
-    }
+    });
+
+}
 
 </script>
 

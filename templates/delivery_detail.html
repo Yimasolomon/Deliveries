@@ -21,15 +21,49 @@
 
 <main class="container">
 
+    {% if error %}
+    <div class="alert error">
+        {{ error }}
+    </div>
+    {% endif %}
+
     <div class="page-header">
         <div>
             <h2>{{ delivery.tracking_number }}</h2>
             <p>Delivery details and status history.</p>
         </div>
 
-        <a href="/deliveries" class="button secondary">
-            Back to Deliveries
-        </a>
+        <div class="form-actions">
+            <a
+                href="/deliveries"
+                class="button secondary"
+            >
+                Back to Deliveries
+            </a>
+
+            {% if delivery.status not in ["delivered", "failed", "cancelled"] %}
+            <a
+                href="/deliveries/{{ delivery.id }}/edit"
+                class="button primary"
+            >
+                Edit Delivery
+            </a>
+
+            <form
+                method="post"
+                action="/deliveries/{{ delivery.id }}/delete"
+                onsubmit="return confirm('Are you sure you want to cancel this delivery?');"
+                style="display: inline;"
+            >
+                <button
+                    type="submit"
+                    class="button danger"
+                >
+                    Cancel Delivery
+                </button>
+            </form>
+            {% endif %}
+        </div>
     </div>
 
     <section class="card">
@@ -94,17 +128,10 @@
 
     </section>
 
-    <section class="card">
-
-        <section class="card">
+<section class="card">
 
     <h3>Update Status</h3>
-
-    {% if error %}
-    <div class="alert error">
-        {{ error }}
-    </div>
-    {% endif %}
+    
 
     <form
         method="post"

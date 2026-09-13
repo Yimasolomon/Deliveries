@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ driver.name }} - Delivery Tracking Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <h1>Delivery Tracking Dashboard</h1>
+
+            <nav>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/deliveries">Deliveries</a>
+                <a href="/customers">Customers</a>
+                <a href="/drivers">Drivers</a>
+                <a href="/reports">Reports</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <div>
+                <h1>{{ driver.name }}</h1>
+                <p>Driver details and delivery history.</p>
+            </div>
+
+            <div>
+                <a href="/drivers" class="button secondary">
+                    Back to Drivers
+                </a>
+
+                <a
+                    href="/drivers/{{ driver.id }}/edit"
+                    class="button primary"
+                >
+                    Edit Driver
+                </a>
+            </div>
+        </div>
+
+        <section>
+            <h2>Driver Information</h2>
+
+            <div class="details-grid">
+                <div>
+                    <strong>Name</strong>
+                    <p>{{ driver.name }}</p>
+                </div>
+
+                <div>
+                    <strong>Phone</strong>
+                    <p>{{ driver.phone }}</p>
+                </div>
+
+                <div>
+                    <strong>Vehicle Type</strong>
+                    <p>{{ driver.vehicle_type }}</p>
+                </div>
+
+                <div>
+                    <strong>Vehicle Number</strong>
+                    <p>{{ driver.vehicle_number }}</p>
+                </div>
+
+                <div>
+                    <strong>Status</strong>
+                    <p>
+                        {{ driver.status|replace("_", " ")|title }}
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Update Status</h2>
+
+            <form
+                method="post"
+                action="/drivers/{{ driver.id }}/status"
+                class="form-actions"
+            >
+                <select name="status">
+                    <option
+                        value="available"
+                        {% if driver.status == "available" %}selected{% endif %}
+                    >
+                        Available
+                    </option>
+
+                    <option
+                        value="busy"
+                        {% if driver.status == "busy" %}selected{% endif %}
+                    >
+                        Busy
+                    </option>
+
+                    <option
+                        value="unavailable"
+                        {% if driver.status == "unavailable" %}selected{% endif %}
+                    >
+                        Unavailable
+                    </option>
+                </select>
+
+                <button type="submit" class="button primary">
+                    Update Status
+                </button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Delivery Statistics</h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-label">Total Deliveries</span>
+                    <strong>{{ stats.total }}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-label">Delivered</span>
+                    <strong>{{ stats.delivered }}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-label">Pending</span>
+                    <strong>{{ stats.pending }}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-label">In Progress</span>
+                    <strong>{{ stats.in_progress }}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-label">Failed</span>
+                    <strong>{{ stats.failed }}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-label">Cancelled</span>
+                    <strong>{{ stats.cancelled }}</strong>
+                </div>
+            </div>
+
+            {% if stats.last_delivery %}
+                <p>
+                    <strong>Last Delivery:</strong>
+                    <a href="/deliveries/{{ stats.last_delivery.id }}">
+                        {{ stats.last_delivery.tracking_number }}
+                    </a>
+                </p>
+            {% else %}
+                <p>No deliveries recorded for this driver.</p>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2>Delivery History</h2>
+
+            {% if deliveries %}
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tracking ID</th>
+                                <th>Customer</th>
+                                <th>Destination</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for delivery in deliveries %}
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            {{ delivery.tracking_number }}
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        {{ delivery.customer.name }}
+                                    </td>
+
+                                    <td>
+                                        {{ delivery.delivery_address }}
+                                    </td>
+
+                                    <td>
+                                        {{ delivery.status|replace("_", " ")|title }}
+                                    </td>
+
+                                    <td>
+                                        {{ delivery.created_at.strftime("%d %b %Y %H:%M") }}
+                                    </td>
+
+                                    <td>
+                                        <a
+                                            href="/deliveries/{{ delivery.id }}"
+                                            class="button secondary"
+                                        >
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No deliveries assigned to this driver.</p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

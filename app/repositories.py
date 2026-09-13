@@ -24,13 +24,41 @@ class CustomerRepository:
         return customer
 
     def get_by_id(self, customer_id: int) -> Customer | None:
-        statement = select(Customer).where(Customer.id == customer_id)
+        statement = select(Customer).where(
+            Customer.id == customer_id
+        )
+        return self.db.scalar(statement)
+
+    def get_by_phone(
+        self,
+        phone: str,
+    ) -> Customer | None:
+        statement = select(Customer).where(
+            Customer.phone == phone
+        )
+        return self.db.scalar(statement)
+
+    def get_by_email(
+        self,
+        email: str,
+    ) -> Customer | None:
+        statement = select(Customer).where(
+            Customer.email == email
+        )
         return self.db.scalar(statement)
 
     def get_all(self) -> list[Customer]:
-        statement = select(Customer).order_by(Customer.id)
+        statement = select(Customer).order_by(Customer.name)
         return list(self.db.scalars(statement).all())
 
+    def get_deliveries(self, customer_id: int) -> list[Delivery]:
+        statement = (
+            select(Delivery)
+            .where(Delivery.customer_id == customer_id)
+            .order_by(Delivery.created_at.desc())
+        )
+        return list(self.db.scalars(statement).all())
+        
 
 class DriverRepository:
     def __init__(self, db: Session):
@@ -50,10 +78,27 @@ class DriverRepository:
         statement = select(Driver).where(Driver.id == driver_id)
         return self.db.scalar(statement)
 
+    def get_by_phone(self, phone: str) -> Driver | None:
+        statement = select(Driver).where(Driver.phone == phone)
+        return self.db.scalar(statement)
+
+    def get_by_vehicle_number(self, vehicle_number: str) -> Driver | None:
+        statement = select(Driver).where(
+            Driver.vehicle_number == vehicle_number
+        )
+        return self.db.scalar(statement)
+
     def get_all(self) -> list[Driver]:
-        statement = select(Driver).order_by(Driver.id)
+        statement = select(Driver).order_by(Driver.name)
         return list(self.db.scalars(statement).all())
 
+    def get_deliveries(self, driver_id: int) -> list[Delivery]:
+        statement = (
+            select(Delivery)
+            .where(Delivery.driver_id == driver_id)
+            .order_by(Delivery.created_at.desc())
+        )
+        return list(self.db.scalars(statement).all())
 
 class DeliveryRepository:
     def __init__(self, db: Session):
@@ -111,3 +156,79 @@ class DeliveryStatusHistoryRepository:
         )
 
         return list(self.db.scalars(statement).all())
+
+class DashboardRepository:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def count_deliveries(self) -> int:
+        from sqlalchemy import func
+
+        statement = select(func.count(Delivery.id))
+        return self.db.scalar(statement) or 0
+
+    def count_deliveries_by_status(self, status: str) -> int:
+        from sqlalchemy import func
+
+        statement = (
+            select(func.count(Delivery.id))
+            .where(Delivery.status == status)
+        )
+        return self.db.scalar(statement) or 0
+
+    def get_all_deliveries(self) -> list[Delivery]:
+        from sqlalchemy.orm import joinedload
+
+        statement = (
+            select(Delivery)
+            .options(
+                joinedload(Delivery.customer),
+                joinedload(Delivery.driver),
+            )
+            .order_by(Delivery.created_at.desc())
+        )
+
+        return list(
+            self.db.scalars(statement).unique().all()
+        )
+
+    def get_recent_deliveries(
+        self,
+        limit: int = 10,
+    ) -> list[Delivery]:
+        from sqlalchemy.orm import joinedload
+
+        statement = (
+            select(Delivery)
+            .options(
+                joinedload(Delivery.customer),
+                joinedload(Delivery.driver),
+            )
+            .order_by(Delivery.created_at.desc())
+            .limit(limit)
+        )
+
+        return list(
+            self.db.scalars(statement).unique().all()
+        )
+
+    def count_customers(self) -> int:
+        from sqlalchemy import func
+
+        statement = select(func.count(Customer.id))
+        return self.db.scalar(statement) or 0
+
+    def count_drivers(self) -> int:
+        from sqlalchemy import func
+
+        statement = select(func.count(Driver.id))
+        return self.db.scalar(statement) or 0
+
+    def count_drivers_by_status(self, status: str) -> int:
+        from sqlalchemy import func
+
+        statement = (
+            select(func.count(Driver.id))
+            .where(Driver.status == status)
+        )
+        return self.db.scalar(statement) or 0
