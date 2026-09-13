@@ -83,52 +83,49 @@ async def deliveries(
     request: Request,
     search: str | None = None,
     status: str | None = None,
+    page: int = 1,
     db: Session = Depends(get_db),
 ):
-    query = (
-        db.query(Delivery)
-        .options(
-            joinedload(Delivery.customer),
-            joinedload(Delivery.driver),
+    service = DeliveryService(db)
+
+    page_size = 10
+
+    if page < 1:
+        page = 1
+
+    deliveries, total_deliveries = (
+        service.get_deliveries(
+            page=page,
+            page_size=page_size,
+            search=search,
+            status=status,
         )
     )
 
-    # Search by tracking number, customer name, phone,
-    # pickup address, or delivery address.
-    if search:
-        search_term = f"%{search.strip()}%"
+    total_pages = max(
+        1,
+        (total_deliveries + page_size - 1)
+        // page_size,
+    )
 
-        query = query.join(
-            Customer,
-            Delivery.customer_id == Customer.id,
-        ).filter(
-            or_(
-                Delivery.tracking_number.ilike(search_term),
-                Customer.name.ilike(search_term),
-                Customer.phone.ilike(search_term),
-                Delivery.pickup_address.ilike(search_term),
-                Delivery.delivery_address.ilike(search_term),
+    # If a user requests a page beyond the final page,
+    # show the final valid page.
+    if page > total_pages and total_deliveries > 0:
+        page = total_pages
+
+        deliveries, total_deliveries = (
+            service.get_deliveries(
+                page=page,
+                page_size=page_size,
+                search=search,
+                status=status,
             )
         )
 
-    # Filter by delivery status.
-    if status:
-        query = query.filter(
-            Delivery.status == status
-        )
-
-    deliveries = (
-        query
-        .order_by(Delivery.id.desc())
-        .all()
-    )
-
-    service = DeliveryService(db)
-
     delayed_delivery_ids = {
-    delivery.id
-    for delivery in deliveries
-    if service.is_delayed(delivery)
+        delivery.id
+        for delivery in deliveries
+        if service.is_delayed(delivery)
     }
 
     statuses = [
@@ -151,8 +148,15 @@ async def deliveries(
             "selected_status": status or "",
             "statuses": statuses,
             "delayed_delivery_ids": delayed_delivery_ids,
+
+            # Pagination
+            "page": page,
+            "page_size": page_size,
+            "total_deliveries": total_deliveries,
+            "total_pages": total_pages,
         },
     )
+
 @app.get("/deliveries/new", response_class=HTMLResponse)
 async def new_delivery_form(
     request: Request,

@@ -432,3 +432,27 @@ textarea {
     display: block;
     font-size: 1.6rem;
 }
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pagination .btn {
+    text-decoration: none;
+}
+
+.pagination .btn-primary {
+    pointer-events: none;
+}

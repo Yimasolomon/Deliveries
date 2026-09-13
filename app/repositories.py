@@ -1,5 +1,5 @@
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import func, or_, select
+from sqlalchemy.orm import Session, joinedload
 
 from app.models import (
     Customer,
@@ -115,22 +115,107 @@ class DeliveryRepository:
         return delivery
 
     def get_by_id(self, delivery_id: int) -> Delivery | None:
-        statement = select(Delivery).where(Delivery.id == delivery_id)
+        statement = (
+            select(Delivery)
+            .where(Delivery.id == delivery_id)
+        )
         return self.db.scalar(statement)
 
     def get_by_tracking_number(
         self,
         tracking_number: str,
     ) -> Delivery | None:
-        statement = select(Delivery).where(
-            Delivery.tracking_number == tracking_number
+        statement = (
+            select(Delivery)
+            .where(
+                Delivery.tracking_number == tracking_number
+            )
         )
         return self.db.scalar(statement)
 
     def get_all(self) -> list[Delivery]:
-        statement = select(Delivery).order_by(Delivery.id)
+        statement = (
+            select(Delivery)
+            .order_by(Delivery.id)
+        )
         return list(self.db.scalars(statement).all())
 
+    def get_paginated(
+        self,
+        *,
+        page: int = 1,
+        page_size: int = 10,
+        search: str | None = None,
+        status: str | None = None,
+    ) -> tuple[list[Delivery], int]:
+        """
+        Return one page of deliveries together with
+        the total number of matching deliveries.
+        """
+
+        filters = []
+
+        if search:
+            search_term = f"%{search.strip()}%"
+
+            filters.append(
+                or_(
+                    Delivery.tracking_number.ilike(
+                        search_term
+                    ),
+                    Customer.name.ilike(search_term),
+                    Customer.phone.ilike(search_term),
+                    Delivery.pickup_address.ilike(
+                        search_term
+                    ),
+                    Delivery.delivery_address.ilike(
+                        search_term
+                    ),
+                )
+            )
+
+        if status:
+            filters.append(
+                Delivery.status == status
+            )
+
+        base_query = (
+            select(Delivery)
+            .join(
+                Customer,
+                Delivery.customer_id == Customer.id,
+            )
+            .where(*filters)
+        )
+
+        count_query = (
+            select(func.count(Delivery.id))
+            .select_from(Delivery)
+            .join(
+                Customer,
+                Delivery.customer_id == Customer.id,
+            )
+            .where(*filters)
+        )
+
+        total = self.db.scalar(count_query) or 0
+
+        statement = (
+            base_query
+            .options(
+                joinedload(Delivery.customer),
+                joinedload(Delivery.driver),
+            )
+            .order_by(Delivery.id.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+
+        deliveries = list(
+            self.db.scalars(statement).all()
+        )
+
+        return deliveries, total
 
 class DeliveryStatusHistoryRepository:
     def __init__(self, db: Session):
