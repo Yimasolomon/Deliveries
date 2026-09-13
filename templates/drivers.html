@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drivers - Delivery Tracking Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <h1>Delivery Tracking Dashboard</h1>
+
+            <nav>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/deliveries">Deliveries</a>
+                <a href="/customers">Customers</a>
+                <a href="/drivers">Drivers</a>
+                <a href="/reports">Reports</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <div>
+                <h1>Drivers</h1>
+                <p>Manage delivery drivers.</p>
+            </div>
+
+            <a href="/drivers/new" class="button primary">
+                + New Driver
+            </a>
+        </div>
+
+        <form method="get" action="/drivers" class="search-form">
+            <div class="form-group">
+                <label for="search">Search</label>
+                <input
+                    type="text"
+                    id="search"
+                    name="search"
+                    value="{{ search }}"
+                    placeholder="Name, phone, vehicle..."
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">All statuses</option>
+                    <option value="available"
+                        {% if status == "available" %}selected{% endif %}>
+                        Available
+                    </option>
+                    <option value="busy"
+                        {% if status == "busy" %}selected{% endif %}>
+                        Busy
+                    </option>
+                    <option value="unavailable"
+                        {% if status == "unavailable" %}selected{% endif %}>
+                        Unavailable
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="button primary">
+                    Search
+                </button>
+
+                <a href="/drivers" class="button secondary">
+                    Clear
+                </a>
+            </div>
+        </form>
+
+        <section>
+            <h2>All Drivers</h2>
+
+            <p>{{ drivers|length }} drivers</p>
+
+            {% if drivers %}
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Vehicle</th>
+                                <th>Vehicle Number</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for driver in drivers %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ driver.name }}</strong>
+                                    </td>
+
+                                    <td>{{ driver.phone }}</td>
+
+                                    <td>{{ driver.vehicle_type }}</td>
+
+                                    <td>{{ driver.vehicle_number }}</td>
+
+                                    <td>
+                                        {{ driver.status|replace("_", " ")|title }}
+                                    </td>
+
+                                    <td>
+                                        <a
+                                            href="/drivers/{{ driver.id }}"
+                                            class="button secondary"
+                                        >
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No drivers found.</p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

@@ -12,3 +12,9 @@ data/*.db-wal
 
 .idea/
 .vscode/
+venv/
+__pycache__/
+*.pyc
+.env
+
+*.save

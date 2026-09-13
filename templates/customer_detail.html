@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>{{ page_title }} - Delivery Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="container">
+        <h1>Delivery Tracking Dashboard</h1>
+
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/deliveries">Deliveries</a>
+            <a href="/customers">Customers</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+
+    <div class="page-header">
+
+        <div>
+            <h2>{{ customer.name }}</h2>
+            <p>Customer details and delivery history.</p>
+        </div>
+
+        <div class="form-actions">
+
+            <a
+                href="/customers"
+                class="button secondary"
+            >
+                Back to Customers
+            </a>
+
+            <a
+                href="/customers/{{ customer.id }}/edit"
+                class="button primary"
+            >
+                Edit Customer
+            </a>
+
+        </div>
+
+    </div>
+
+    <section class="card">
+
+        <h3>Customer Information</h3>
+
+        <p>
+            <strong>Name</strong><br>
+            {{ customer.name }}
+        </p>
+
+        <p>
+            <strong>Phone</strong><br>
+            {{ customer.phone }}
+        </p>
+
+        <p>
+            <strong>Email</strong><br>
+            {{ customer.email or "—" }}
+        </p>
+
+        <p>
+            <strong>Address</strong><br>
+            {{ customer.address }}
+        </p>
+
+    </section>
+
+    <section class="card">
+
+        <h2>Delivery Statistics</h2>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">Total Deliveries</span>
+                <strong>{{ stats.total }}</strong>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Delivered</span>
+                <strong>{{ stats.delivered }}</strong>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Pending</span>
+                <strong>{{ stats.pending }}</strong>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">In Progress</span>
+                <strong>{{ stats.in_progress }}</strong>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Failed</span>
+                <strong>{{ stats.failed }}</strong>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Cancelled</span>
+                <strong>{{ stats.cancelled }}</strong>
+            </div>
+        </div>
+
+        {% if stats.last_delivery %}
+            <p>
+                <strong>Last Delivery:</strong>
+                <a href="/deliveries/{{ stats.last_delivery.id }}">
+                    {{ stats.last_delivery.tracking_number }}
+                </a>
+            </p>
+        {% else %}
+            <p>No deliveries recorded for this customer.</p>
+        {% endif %}
+
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-label">Pending</span>
+        <strong>{{ stats.pending }}</strong>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-label">In Progress</span>
+        <strong>{{ stats.in_progress }}</strong>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-label">Failed</span>
+        <strong>{{ stats.failed }}</strong>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-label">Cancelled</span>
+        <strong>{{ stats.cancelled }}</strong>
+    </div>
+</div>
+
+{% if stats.last_delivery %}
+    <p>
+        <strong>Last Delivery:</strong>
+        <a href="/deliveries/{{ stats.last_delivery.id }}">
+            {{ stats.last_delivery.tracking_number }}
+        </a>
+    </p>
+{% else %}
+    <p>No deliveries recorded for this customer.</p>
+{% endif %}
+
+        <h3>Delivery History</h3>
+
+        {% if deliveries %}
+
+        <div class="table-responsive">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Tracking ID</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for delivery in deliveries %}
+
+                    <tr>
+
+                        <td>
+                            {{ delivery.tracking_number }}
+                        </td>
+
+                        <td>
+                            {{ delivery.delivery_address }}
+                        </td>
+
+                        <td>
+                            <span class="status {{ delivery.status }}">
+                                {{ delivery.status|replace('_', ' ')|title }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ delivery.created_at.strftime('%d %b %Y %H:%M') }}
+                        </td>
+
+                        <td>
+                            <a
+                                href="/deliveries/{{ delivery.id }}"
+                                class="button small"
+                            >
+                                View
+                            </a>
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <p>No deliveries found for this customer.</p>
+
+        {% endif %}
+
+    </section>
+
+</main>
+
+</body>
+</html>

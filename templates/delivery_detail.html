@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }} - Delivery Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="container">
+        <h1>Delivery Tracking Dashboard</h1>
+
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/deliveries">Deliveries</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+
+    {% if error %}
+    <div class="alert error">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="page-header">
+        <div>
+            <h2>{{ delivery.tracking_number }}</h2>
+            <p>Delivery details and status history.</p>
+        </div>
+
+        <div class="form-actions">
+            <a
+                href="/deliveries"
+                class="button secondary"
+            >
+                Back to Deliveries
+            </a>
+
+            {% if delivery.status not in ["delivered", "failed", "cancelled"] %}
+            <a
+                href="/deliveries/{{ delivery.id }}/edit"
+                class="button primary"
+            >
+                Edit Delivery
+            </a>
+
+            <form
+                method="post"
+                action="/deliveries/{{ delivery.id }}/delete"
+                onsubmit="return confirm('Are you sure you want to cancel this delivery?');"
+                style="display: inline;"
+            >
+                <button
+                    type="submit"
+                    class="button danger"
+                >
+                    Cancel Delivery
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <section class="card">
+
+        <h3>Delivery Information</h3>
+
+        <div class="detail-grid">
+
+            <div>
+                <strong>Tracking Number</strong>
+                <p>{{ delivery.tracking_number }}</p>
+            </div>
+
+            <div>
+                <strong>Status</strong>
+                <p>{{ delivery.status|replace('_', ' ')|title }}</p>
+            </div>
+
+            <div>
+                <strong>Customer</strong>
+                <p>{{ delivery.customer.name }}</p>
+            </div>
+
+            <div>
+                <strong>Phone</strong>
+                <p>{{ delivery.customer.phone }}</p>
+            </div>
+
+            <div>
+                <strong>Driver</strong>
+                <p>
+                    {% if delivery.driver %}
+                        {{ delivery.driver.name }}
+                    {% else %}
+                        Unassigned
+                    {% endif %}
+                </p>
+            </div>
+
+            <div>
+                <strong>Pickup Address</strong>
+                <p>{{ delivery.pickup_address }}</p>
+            </div>
+
+            <div>
+                <strong>Delivery Address</strong>
+                <p>{{ delivery.delivery_address }}</p>
+            </div>
+
+            <div>
+                <strong>Scheduled</strong>
+                <p>
+                    {% if delivery.scheduled_at %}
+                        {{ delivery.scheduled_at.strftime('%d %b %Y %H:%M') }}
+                    {% else %}
+                        Not scheduled
+                    {% endif %}
+                </p>
+            </div>
+
+        </div>
+
+    </section>
+
+<section class="card">
+
+    <h3>Update Status</h3>
+    
+
+    <form
+        method="post"
+        action="/deliveries/{{ delivery.id }}/status"
+    >
+
+        <div class="form-group">
+
+            <label for="status">
+                New Status
+            </label>
+
+            <select
+                id="status"
+                name="status"
+                required
+            >
+                <option value="pending"
+                    {% if delivery.status == "pending" %}
+                    selected
+                    {% endif %}
+                >
+                    Pending
+                </option>
+
+                <option value="in_transit"
+                    {% if delivery.status == "in_transit" %}
+                    selected
+                    {% endif %}
+                >
+                    In Transit
+                </option>
+
+                <option value="out_for_delivery"
+                    {% if delivery.status == "out_for_delivery" %}
+                    selected
+                    {% endif %}
+                >
+                    Out For Delivery
+                </option>
+
+                <option value="delivered"
+                    {% if delivery.status == "delivered" %}
+                    selected
+                    {% endif %}
+                >
+                    Delivered
+                </option>
+
+                <option value="failed"
+                    {% if delivery.status == "failed" %}
+                    selected
+                    {% endif %}
+                >
+                    Failed
+                </option>
+
+                <option value="cancelled"
+                    {% if delivery.status == "cancelled" %}
+                    selected
+                    {% endif %}
+                >
+                    Cancelled
+                </option>
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="note">
+                Note
+            </label>
+
+            <textarea
+                id="note"
+                name="note"
+                rows="3"
+                placeholder="Optional status note"
+            ></textarea>
+
+        </div>
+
+        <button
+            type="submit"
+            class="button primary"
+        >
+            Update Status
+        </button>
+
+    </form>
+
+</section>
+
+        <h3>Status History</h3>
+
+        {% if history %}
+
+            <div class="timeline">
+
+                {% for item in history %}
+                <div class="timeline-item">
+
+                    <strong>
+                        {{ item.status|replace('_', ' ')|title }}
+                    </strong>
+
+                    <span>
+                        {{ item.created_at.strftime('%d %b %Y %H:%M') }}
+                    </span>
+
+                    {% if item.note %}
+                    <p>{{ item.note }}</p>
+                    {% endif %}
+
+                </div>
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+            <p>No status history available.</p>
+        {% endif %}
+
+    </section>
+
+</main>
+
+<script src="{{ url_for('static', path='js/app.js') }}"></script>
+
+</body>
+</html>

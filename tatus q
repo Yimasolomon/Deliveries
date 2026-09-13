@@ -1,0 +1,5 @@
+[33m8aa37c1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/my-phase[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Complete phases 1-4
+[33mf7b5634[m added files; init_db.py and contents to files; models.py and the tests carried out: test_customer.py and test_relationships.py
+[33m0665ee0[m Added database.py
+[33m49ff241[m phase 1 of deliveries
+[33mff5b171[m Initial commit

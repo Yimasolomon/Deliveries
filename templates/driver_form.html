@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Driver - Delivery Tracking Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <h1>Delivery Tracking Dashboard</h1>
+
+            <nav>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/deliveries">Deliveries</a>
+                <a href="/customers">Customers</a>
+                <a href="/drivers">Drivers</a>
+                <a href="/reports">Reports</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>New Driver</h1>
+        <p>Create a driver record.</p>
+
+        <a href="/drivers" class="button secondary">
+            Back to Drivers
+        </a>
+
+        {% if error %}
+            <div class="alert error">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="post" action="/drivers" class="form-card">
+
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    value="{{ driver.name if driver else '' }}"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input
+                    type="text"
+                    id="phone"
+                    name="phone"
+                    required
+                    value="{{ driver.phone if driver else '' }}"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="vehicle_type">Vehicle Type</label>
+                <input
+                    type="text"
+                    id="vehicle_type"
+                    name="vehicle_type"
+                    required
+                    placeholder="Motorcycle, Car, Van..."
+                    value="{{ driver.vehicle_type if driver else '' }}"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="vehicle_number">Vehicle Number</label>
+                <input
+                    type="text"
+                    id="vehicle_number"
+                    name="vehicle_number"
+                    required
+                    value="{{ driver.vehicle_number if driver else '' }}"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="available">Available</option>
+                    <option value="busy">Busy</option>
+                    <option value="unavailable">Unavailable</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="button primary">
+                    Create Driver
+                </button>
+
+                <a href="/drivers" class="button secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

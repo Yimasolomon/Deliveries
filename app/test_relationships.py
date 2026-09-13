@@ -1,41 +1,68 @@
-from app.database import SessionLocal
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.database import Base
 from app.models import Customer, Driver, Delivery
 
 
-db = SessionLocal()
+def test_delivery_relationships():
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+    )
 
-customer = Customer(
-    name="Alice Johnson",
-    phone="08022222222",
-    email="alice@example.com",
-    address="Otukpo, Nigeria",
-)
+    TestingSessionLocal = sessionmaker(
+        bind=engine,
+        autoflush=False,
+        autocommit=False,
+    )
 
-driver = Driver(
-    name="David Driver",
-    phone="08033333333",
-    vehicle_type="Motorcycle",
-    vehicle_number="BEN-123-XY",
-)
+    Base.metadata.create_all(bind=engine)
 
-delivery = Delivery(
-    tracking_number="DLV-000001",
-    pickup_address="Otukpo, Nigeria",
-    delivery_address="Makurdi, Nigeria",
-    customer=customer,
-    driver=driver,
-)
+    db = TestingSessionLocal()
 
-db.add(delivery)
-db.commit()
-db.refresh(delivery)
+    try:
+        customer = Customer(
+            name="Alice Johnson",
+            phone="08022222222",
+            email="alice@example.com",
+            address="Otukpo, Nigeria",
+        )
 
-print("Delivery ID:", delivery.id)
-print("Tracking number:", delivery.tracking_number)
-print("Customer:", delivery.customer.name)
-print("Driver:", delivery.driver.name)
+        driver = Driver(
+            name="David Driver",
+            phone="08033333333",
+            vehicle_type="Motorcycle",
+            vehicle_number="BEN-123-XY",
+        )
 
-print("Customer deliveries:", len(customer.deliveries))
-print("Driver deliveries:", len(driver.deliveries))
+        delivery = Delivery(
+            tracking_number="TEST-DLV-000001",
+            pickup_address="Otukpo, Nigeria",
+            delivery_address="Makurdi, Nigeria",
+            customer=customer,
+            driver=driver,
+        )
 
-db.close()
+        db.add(delivery)
+        db.commit()
+        db.refresh(delivery)
+
+        assert delivery.id is not None
+        assert delivery.tracking_number == "TEST-DLV-000001"
+
+        assert delivery.customer is customer
+        assert delivery.customer.name == "Alice Johnson"
+
+        assert delivery.driver is driver
+        assert delivery.driver.name == "David Driver"
+
+        assert len(customer.deliveries) == 1
+        assert customer.deliveries[0] is delivery
+
+        assert len(driver.deliveries) == 1
+        assert driver.deliveries[0] is delivery
+
+    finally:
+        db.close()
+        engine.dispose()
