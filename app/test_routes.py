@@ -449,3 +449,169 @@ def test_create_driver_route_persists_driver(route_client):
     assert driver.status == "available"
 
     db.close()
+
+def test_edit_delivery_form_loads(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    delivery = Delivery(
+        tracking_number="DLV-EDIT-001",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+        status="pending",
+    )
+
+    db.add(delivery)
+    db.commit()
+    db.refresh(delivery)
+
+    delivery_id = delivery.id
+    db.close()
+
+    response = client.get(
+        f"/deliveries/{delivery_id}/edit"
+    )
+
+    assert response.status_code == 200
+    assert "Edit Delivery" in response.text
+    assert "DLV-EDIT-001" in response.text
+    assert "Route Customer" in response.text
+    assert "Route Driver" in response.text
+
+
+def test_edit_delivery_missing_returns_404(route_client):
+    client, _ = route_client
+
+    response = client.get(
+        "/deliveries/999999/edit"
+    )
+
+    assert response.status_code == 404
+    assert "Delivery not found" in response.text
+
+
+def test_edit_delivery_route_persists_changes(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    customer = Customer(
+        name="Updated Route Customer",
+        phone="09100003001",
+        email="updated-route@example.com",
+        address="Yaba, Lagos",
+    )
+
+    db.add(customer)
+    db.commit()
+    db.refresh(customer)
+
+    updated_customer_id = customer.id
+
+    delivery = Delivery(
+        tracking_number="DLV-EDIT-002",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+        status="pending",
+    )
+
+    db.add(delivery)
+    db.commit()
+    db.refresh(delivery)
+
+    delivery_id = delivery.id
+    original_tracking_number = delivery.tracking_number
+    original_status = delivery.status
+
+    db.close()
+
+    response = client.post(
+        f"/deliveries/{delivery_id}/edit",
+        data={
+            "customer_id": str(updated_customer_id),
+            "driver_id": str(driver_id),
+            "pickup_address": "Yaba, Lagos",
+            "delivery_address": "Victoria Island, Lagos",
+            "scheduled_at": "2026-09-15T14:30",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == (
+        f"/deliveries/{delivery_id}"
+    )
+
+    db = session_factory()
+
+    updated = db.get(Delivery, delivery_id)
+
+    assert updated is not None
+    assert updated.customer_id == updated_customer_id
+    assert updated.driver_id == driver_id
+    assert updated.pickup_address == "Yaba, Lagos"
+    assert updated.delivery_address == "Victoria Island, Lagos"
+    assert updated.scheduled_at == datetime(
+        2026,
+        9,
+        15,
+        14,
+        30,
+    )
+    assert updated.tracking_number == original_tracking_number
+    assert updated.status == original_status
+
+    db.close()
+
+
+def test_edit_delivery_rejects_missing_customer(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    delivery = Delivery(
+        tracking_number="DLV-EDIT-003",
+        customer_id=customer_id,
+        driver_id=driver_id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+        status="pending",
+    )
+
+    db.add(delivery)
+    db.commit()
+    db.refresh(delivery)
+
+    delivery_id = delivery.id
+    db.close()
+
+    response = client.post(
+        f"/deliveries/{delivery_id}/edit",
+        data={
+            "customer_id": "999999",
+            "driver_id": "",
+            "pickup_address": "Ikeja",
+            "delivery_address": "Lekki",
+            "scheduled_at": "",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "Customer 999999 was not found." in response.text
