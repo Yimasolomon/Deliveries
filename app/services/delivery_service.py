@@ -189,37 +189,7 @@ class DeliveryService:
             self.db.rollback()
             raise
 
-    def get_deliveries(
-        self,
-        *,
-        page: int = 1,
-        page_size: int = 10,
-        search: str | None = None,
-        status: str | None = None,
-    ) -> tuple[list[Delivery], int]:
-        """
-        Return paginated deliveries and the total number
-        of matching deliveries.
-        """
 
-        if page < 1:
-            page = 1
-
-        if page_size < 1:
-            page_size = 10
-
-        if page_size > 100:
-            page_size = 100
-
-        search = search.strip() if search else None
-        status = status.strip().lower() if status else None
-
-        return self.deliveries.get_paginated(
-            page=page,
-            page_size=page_size,
-            search=search,
-            status=status,
-        )
 
     def get_delivery_count(self) -> int:
 
