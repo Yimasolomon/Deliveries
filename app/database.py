@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from sqlalchemy import create_engine
@@ -7,20 +8,33 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-
-DATABASE_URL = f"sqlite:///{DATA_DIR / 'deliveries.db'}"
+# Use an external DATABASE_URL in production.
+# Fall back to local SQLite during development.
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    f"sqlite:///{DATA_DIR / 'deliveries.db'}",
+)
 
 
 class Base(DeclarativeBase):
     pass
 
 
+# SQLite needs this option for local development.
+# Other databases, such as PostgreSQL, do not need it.
+connect_args = {}
+
+if DATABASE_URL.startswith("sqlite"):
+    # Only create the local data directory when SQLite is being used.
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    connect_args = {
+        "check_same_thread": False,
+    }
+
+
 engine = create_engine(
     DATABASE_URL,
-    connect_args={
-        "check_same_thread": False,
-    },
+    connect_args=connect_args,
 )
 
 
@@ -38,3 +52,4 @@ def get_db():
         yield db
     finally:
         db.close()
+
