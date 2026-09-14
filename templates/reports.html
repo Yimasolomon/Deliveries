@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ page_title or "Reports" }} - Delivery Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+            <div class="brand-icon">D</div>
+
+            <div class="brand-text">
+                <div class="brand-name">Delivery</div>
+                <div class="brand-subtitle">Dashboard</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <a href="/dashboard" class="nav-item">
+                <span class="nav-icon">▦</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/deliveries" class="nav-item">
+                <span class="nav-icon">□</span>
+                <span>Deliveries</span>
+            </a>
+
+            <a href="/customers" class="nav-item">
+                <span class="nav-icon">♙</span>
+                <span>Customers</span>
+            </a>
+
+            <a href="/drivers" class="nav-item">
+                <span class="nav-icon">♙</span>
+                <span>Drivers</span>
+            </a>
+
+            <a href="/reports" class="nav-item active">
+                <span class="nav-icon">▥</span>
+                <span>Reports</span>
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <header class="top-header">
+
+            <div>
+                <h1>Reports</h1>
+
+                <p>
+                    Overview of your delivery operations.
+                </p>
+            </div>
+
+        </header>
+
+
+        <section class="dashboard-content">
+
+            <div class="page-heading">
+
+                <div>
+                    <h2>Delivery Summary</h2>
+
+                    <p>
+                        Current delivery activity and performance.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- DELIVERY SUMMARY -->
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-label">Total Deliveries</div>
+
+                    <div class="stat-value">
+                        {{ total }}
+                    </div>
+
+                    <div class="stat-description">
+                        All deliveries
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-label">Pending</div>
+
+                    <div class="stat-value">
+                        {{ pending }}
+                    </div>
+
+                    <div class="stat-description">
+                        Awaiting pickup
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-label">In Transit</div>
+
+                    <div class="stat-value">
+                        {{ in_transit }}
+                    </div>
+
+                    <div class="stat-description">
+                        Currently moving
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-label">Out for Delivery</div>
+
+                    <div class="stat-value">
+                        {{ out_for_delivery }}
+                    </div>
+
+                    <div class="stat-description">
+                        Near destination
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-label">Delivered</div>
+
+                    <div class="stat-value">
+                        {{ delivered }}
+                    </div>
+
+                    <div class="stat-description">
+                        Successfully completed
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-label">Failed</div>
+
+                    <div class="stat-value">
+                        {{ failed }}
+                    </div>
+
+                    <div class="stat-description">
+                        Delivery attempts failed
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-label">Cancelled</div>
+
+                    <div class="stat-value">
+                        {{ cancelled }}
+                    </div>
+
+                    <div class="stat-description">
+                        Cancelled deliveries
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-label">Delayed</div>
+
+                    <div class="stat-value">
+                        {{ delayed }}
+                    </div>
+
+                    <div class="stat-description">
+                        Past estimated delivery
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- PEOPLE SUMMARY -->
+
+            <div class="page-heading">
+
+                <div>
+                    <h2>People Summary</h2>
+
+                    <p>
+                        Customers and drivers registered in the system.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Total Customers
+                    </div>
+
+                    <div class="stat-value">
+                        {{ total_customers }}
+                    </div>
+
+                    <div class="stat-description">
+                        Registered customers
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Total Drivers
+                    </div>
+
+                    <div class="stat-value">
+                        {{ total_drivers }}
+                    </div>
+
+                    <div class="stat-description">
+                        Registered drivers
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- REPORT INFORMATION -->
+
+            <section class="dashboard-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Report Overview</h3>
+
+                        <p>
+                            Summary of the current delivery operation.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="status-list">
+
+                    <div class="status-row">
+
+                        <div class="status-name">
+                            Total deliveries
+                        </div>
+
+                        <strong>
+                            {{ total }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="status-row">
+
+                        <div class="status-name">
+                            Successfully delivered
+                        </div>
+
+                        <strong>
+                            {{ delivered }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="status-row">
+
+                        <div class="status-name">
+                            Currently in progress
+                        </div>
+
+                        <strong>
+                            {{ in_transit + out_for_delivery }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="status-row">
+
+                        <div class="status-name">
+                            Delayed deliveries
+                        </div>
+
+                        <strong>
+                            {{ delayed }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="status-row">
+
+                        <div class="status-name">
+                            Registered customers
+                        </div>
+
+                        <strong>
+                            {{ total_customers }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="status-row">
+
+                        <div class="status-name">
+                            Registered drivers
+                        </div>
+
+                        <strong>
+                            {{ total_drivers }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<button
+    id="menuButton"
+    class="mobile-menu-button"
+    type="button"
+    aria-label="Open navigation"
+>
+    ☰
+</button>
+
+
+<script src="{{ url_for('static', path='js/app.js') }}"></script>
+
+</body>
+</html>

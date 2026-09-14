@@ -1,644 +1,524 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{{ page_title or "Dashboard" }} - Delivery Dashboard</title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', path='css/style.css') }}"
-    >
+<title>{{ page_title or "Dashboard" }} - Delivery Dashboard</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', path='css/style.css') }}"
+>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
 </head>
 
 <body>
 
 <div class="app-container">
 
-    <aside class="sidebar">
 
-        <div class="sidebar-header">
-            <div class="brand-icon">D</div>
+<aside class="sidebar">
 
-            <div class="brand-text">
-                <div class="brand-name">Delivery</div>
-                <div class="brand-subtitle">Dashboard</div>
-            </div>
+    <div class="sidebar-header">
+        <div class="brand-icon">D</div>
+
+        <div class="brand-text">
+            <div class="brand-name">Delivery</div>
+            <div class="brand-subtitle">Dashboard</div>
         </div>
+    </div>
 
-        <nav class="sidebar-nav">
+    <nav class="sidebar-nav">
 
-            <a href="/dashboard" class="nav-item active">
-                <span class="nav-icon">▦</span>
-                <span>Dashboard</span>
-            </a>
+        <a href="/dashboard" class="nav-item active">
+            <span class="nav-icon">▦</span>
+            <span>Dashboard</span>
+        </a>
 
-            <a href="/deliveries" class="nav-item">
-                <span class="nav-icon">□</span>
-                <span>Deliveries</span>
-            </a>
+        <a href="/deliveries" class="nav-item">
+            <span class="nav-icon">□</span>
+            <span>Deliveries</span>
+        </a>
 
-            <a href="/customers" class="nav-item">
-                <span class="nav-icon">♙</span>
-                <span>Customers</span>
-            </a>
+        <a href="/customers" class="nav-item">
+            <span class="nav-icon">♙</span>
+            <span>Customers</span>
+        </a>
 
-            <a href="/drivers" class="nav-item">
-                <span class="nav-icon">♙</span>
-                <span>Drivers</span>
-            </a>
+        <a href="/drivers" class="nav-item">
+            <span class="nav-icon">♙</span>
+            <span>Drivers</span>
+        </a>
 
-            <a href="/reports" class="nav-item">
-                <span class="nav-icon">▥</span>
-                <span>Reports</span>
-            </a>
+        <a href="/reports" class="nav-item">
+            <span class="nav-icon">▥</span>
+            <span>Reports</span>
+        </a>
 
-        </nav>
+    </nav>
 
-    </aside>
+</aside>
 
+<main class="main-content">
 
-    <main class="main-content">
+    <header class="top-header">
+        <div>
+            <h1>Dashboard</h1>
+            <p>Monitor your deliveries and operations.</p>
+        </div>
+    </header>
 
-        <header class="top-header">
+    <section class="dashboard-content">
+
+        <div class="page-heading">
 
             <div>
-                <h1>Dashboard</h1>
-
-                <p>
-                    Monitor your deliveries and operations.
-                </p>
+                <h2>Overview</h2>
+                <p>Your delivery operations at a glance.</p>
             </div>
 
-        </header>
+            <a href="/deliveries/new" class="primary-button">
+                + New Delivery
+            </a>
 
+        </div>
 
-        <section class="dashboard-content">
+        <div class="stats-grid">
 
-            <div class="page-heading">
+            <div class="stat-card">
+                <div class="stat-label">Total Deliveries</div>
+                <div class="stat-value">{{ total }}</div>
+                <div class="stat-description">All deliveries</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Pending</div>
+                <div class="stat-value">{{ pending }}</div>
+                <div class="stat-description">Awaiting pickup</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">In Transit</div>
+                <div class="stat-value">{{ in_transit }}</div>
+                <div class="stat-description">Currently moving</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Out for Delivery</div>
+                <div class="stat-value">{{ out_for_delivery }}</div>
+                <div class="stat-description">Near destination</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Delivered</div>
+                <div class="stat-value">{{ delivered }}</div>
+                <div class="stat-description">Successfully completed</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value">{{ failed }}</div>
+                <div class="stat-description">Delivery attempts failed</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Cancelled</div>
+                <div class="stat-value">{{ cancelled }}</div>
+                <div class="stat-description">Cancelled deliveries</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Delayed</div>
+                <div class="stat-value">{{ delayed }}</div>
+                <div class="stat-description">Past estimated delivery</div>
+            </div>
+
+        </div>
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-label">Customers</div>
+                <div class="stat-value">{{ total_customers }}</div>
+                <div class="stat-description">Registered customers</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Total Drivers</div>
+                <div class="stat-value">{{ total_drivers }}</div>
+                <div class="stat-description">Registered drivers</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Available Drivers</div>
+                <div class="stat-value">{{ available_drivers }}</div>
+                <div class="stat-description">Ready for delivery</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Busy Drivers</div>
+                <div class="stat-value">{{ busy_drivers }}</div>
+                <div class="stat-description">Currently assigned</div>
+            </div>
+
+        </div>
+
+        <div class="dashboard-grid">
+
+            <section class="dashboard-card">
+
+                <div class="card-header">
+                    <div>
+                        <h3>Delivery Status</h3>
+                        <p>Current distribution of deliveries.</p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="deliveryStatusChart"></canvas>
+                </div>
+
+            </section>
+
+            <section class="dashboard-card">
+
+                <div class="card-header">
+                    <div>
+                        <h3>Status Summary</h3>
+                        <p>Current delivery workload.</p>
+                    </div>
+                </div>
+
+                <div class="status-list">
+
+                    <div class="status-row">
+                        <div class="status-name">
+                            <span class="status-dot pending"></span>
+                            Pending
+                        </div>
+                        <strong>{{ pending }}</strong>
+                    </div>
+
+                    <div class="status-row">
+                        <div class="status-name">
+                            <span class="status-dot in-transit"></span>
+                            In Transit
+                        </div>
+                        <strong>{{ in_transit }}</strong>
+                    </div>
+
+                    <div class="status-row">
+                        <div class="status-name">
+                            <span class="status-dot out-for-delivery"></span>
+                            Out for Delivery
+                        </div>
+                        <strong>{{ out_for_delivery }}</strong>
+                    </div>
+
+                    <div class="status-row">
+                        <div class="status-name">
+                            <span class="status-dot delivered"></span>
+                            Delivered
+                        </div>
+                        <strong>{{ delivered }}</strong>
+                    </div>
+
+                    <div class="status-row">
+                        <div class="status-name">
+                            <span class="status-dot failed"></span>
+                            Failed
+                        </div>
+                        <strong>{{ failed }}</strong>
+                    </div>
+
+                    <div class="status-row">
+                        <div class="status-name">
+                            <span class="status-dot cancelled"></span>
+                            Cancelled
+                        </div>
+                        <strong>{{ cancelled }}</strong>
+                    </div>
+
+                    <div class="status-row">
+                        <div class="status-name">
+                            <span class="status-dot delayed"></span>
+                            Delayed
+                        </div>
+                        <strong>{{ delayed }}</strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+        <section class="dashboard-card recent-card">
+
+            <div class="card-header">
 
                 <div>
-                    <h2>Overview</h2>
-
+                    <h3>Delayed Deliveries</h3>
                     <p>
-                        Your delivery operations at a glance.
+                        Deliveries currently past their estimated delivery time.
                     </p>
                 </div>
 
-                <a href="/deliveries/new" class="primary-button">
-                    + New Delivery
+                <a href="/deliveries" class="view-all">
+                    View all
                 </a>
 
             </div>
 
+            {% if delayed_deliveries %}
 
-            <!-- DELIVERY STATISTICS -->
+            <div class="table-wrapper">
 
-            <div class="stats-grid">
+                <table class="deliveries-table">
 
-                <div class="stat-card">
-                    <div class="stat-label">Total Deliveries</div>
-                    <div class="stat-value">{{ total }}</div>
-                    <div class="stat-description">
-                        All deliveries
-                    </div>
-                </div>
+                    <thead>
+                        <tr>
+                            <th>Tracking ID</th>
+                            <th>Customer</th>
+                            <th>Destination</th>
+                            <th>Driver</th>
+                            <th>Status</th>
+                            <th>Estimated Delivery</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
 
-                <div class="stat-card">
-                    <div class="stat-label">Pending</div>
-                    <div class="stat-value">{{ pending }}</div>
-                    <div class="stat-description">
-                        Awaiting pickup
-                    </div>
-                </div>
+                    <tbody>
 
-                <div class="stat-card">
-                    <div class="stat-label">In Transit</div>
-                    <div class="stat-value">{{ in_transit }}</div>
-                    <div class="stat-description">
-                        Currently moving
-                    </div>
-                </div>
+                        {% for delivery in delayed_deliveries[:10] %}
 
-                <div class="stat-card">
-                    <div class="stat-label">Out for Delivery</div>
-                    <div class="stat-value">{{ out_for_delivery }}</div>
-                    <div class="stat-description">
-                        Near destination
-                    </div>
-                </div>
+                        <tr>
 
-                <div class="stat-card">
-                    <div class="stat-label">Delivered</div>
-                    <div class="stat-value">{{ delivered }}</div>
-                    <div class="stat-description">
-                        Successfully completed
-                    </div>
-                </div>
+                            <td>
+                                <a
+                                    href="/deliveries/{{ delivery.id }}"
+                                    class="tracking-link"
+                                >
+                                    {{ delivery.tracking_number }}
+                                </a>
+                            </td>
 
-                <div class="stat-card">
-                    <div class="stat-label">Failed</div>
-                    <div class="stat-value">{{ failed }}</div>
-                    <div class="stat-description">
-                        Delivery attempts failed
-                    </div>
-                </div>
+                            <td>
+                                {% if delivery.customer %}
+                                    {{ delivery.customer.name }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
 
-                <div class="stat-card">
-                    <div class="stat-label">Cancelled</div>
-                    <div class="stat-value">{{ cancelled }}</div>
-                    <div class="stat-description">
-                        Cancelled deliveries
-                    </div>
-                </div>
+                            <td>{{ delivery.delivery_address }}</td>
 
-                <div class="stat-card">
-                    <div class="stat-label">Delayed</div>
-                    <div class="stat-value">{{ delayed }}</div>
-                    <div class="stat-description">
-                        Past estimated delivery
-                    </div>
-                </div>
+                            <td>
+                                {% if delivery.driver %}
+                                    {{ delivery.driver.name }}
+                                {% else %}
+                                    <span class="unassigned">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ delivery.status }}">
+                                    {{ delivery.status.replace("_", " ").title() }}
+                                </span>
+                            </td>
 
-            </div>
+                            <td>
+                                {% if delivery.scheduled_at %}
+                                    {{ delivery.scheduled_at.strftime("%d %b %Y, %H:%M") }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a
+                                    href="/deliveries/{{ delivery.id }}"
+                                    class="action-link"
+                                >
+                                    View
+                                </a>
+                            </td>
 
+                        </tr>
 
-            <!-- PEOPLE / OPERATIONS SUMMARY -->
+                        {% endfor %}
 
-            <div class="stats-grid">
+                    </tbody>
 
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Customers
-                    </div>
-
-                    <div class="stat-value">
-                        {{ total_customers }}
-                    </div>
-
-                    <div class="stat-description">
-                        Registered customers
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Total Drivers
-                    </div>
-
-                    <div class="stat-value">
-                        {{ total_drivers }}
-                    </div>
-
-                    <div class="stat-description">
-                        Registered drivers
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Available Drivers
-                    </div>
-
-                    <div class="stat-value">
-                        {{ available_drivers }}
-                    </div>
-
-                    <div class="stat-description">
-                        Ready for delivery
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Busy Drivers
-                    </div>
-
-                    <div class="stat-value">
-                        {{ busy_drivers }}
-                    </div>
-
-                    <div class="stat-description">
-                        Currently assigned
-                    </div>
-
-                </div>
+                </table>
 
             </div>
 
+            {% else %}
 
-            <!-- CHART + STATUS SUMMARY -->
-
-            <div class="dashboard-grid">
-
-                <section class="dashboard-card">
-
-                    <div class="card-header">
-
-                        <div>
-                            <h3>Delivery Status</h3>
-
-                            <p>
-                                Current distribution of deliveries.
-                            </p>
-                        </div>
-
-                    </div>
-
-                    <div class="chart-container">
-                        <canvas id="deliveryStatusChart"></canvas>
-                    </div>
-
-                </section>
-
-
-                <section class="dashboard-card">
-
-                    <div class="card-header">
-
-                        <div>
-                            <h3>Status Summary</h3>
-
-                            <p>
-                                Current delivery workload.
-                            </p>
-                        </div>
-
-                    </div>
-
-
-                    <div class="status-list">
-
-                        <div class="status-row">
-                            <div class="status-name">
-                                <span class="status-dot pending"></span>
-                                Pending
-                            </div>
-                            <strong>{{ pending }}</strong>
-                        </div>
-
-                        <div class="status-row">
-                            <div class="status-name">
-                                <span class="status-dot in-transit"></span>
-                                In Transit
-                            </div>
-                            <strong>{{ in_transit }}</strong>
-                        </div>
-
-                        <div class="status-row">
-                            <div class="status-name">
-                                <span class="status-dot out-for-delivery"></span>
-                                Out for Delivery
-                            </div>
-                            <strong>{{ out_for_delivery }}</strong>
-                        </div>
-
-                        <div class="status-row">
-                            <div class="status-name">
-                                <span class="status-dot delivered"></span>
-                                Delivered
-                            </div>
-                            <strong>{{ delivered }}</strong>
-                        </div>
-
-                        <div class="status-row">
-                            <div class="status-name">
-                                <span class="status-dot failed"></span>
-                                Failed
-                            </div>
-                            <strong>{{ failed }}</strong>
-                        </div>
-
-                        <div class="status-row">
-                            <div class="status-name">
-                                Cancelled
-                            </div>
-                            <strong>{{ cancelled }}</strong>
-                        </div>
-
-                        <div class="status-row">
-                            <div class="status-name">
-                                <span class="status-dot delayed"></span>
-                                Delayed
-                            </div>
-                            <strong>{{ delayed }}</strong>
-                        </div>
-
-                    </div>
-
-                </section>
-
+            <div class="empty-state">
+                <h4>No delayed deliveries</h4>
+                <p>All scheduled deliveries are currently on time.</p>
             </div>
 
-
-            <!-- DELAYED DELIVERIES -->
-
-            <section class="dashboard-card recent-card">
-
-                <div class="card-header">
-
-                    <div>
-                        <h3>Delayed Deliveries</h3>
-
-                        <p>
-                            Deliveries currently past their estimated delivery time.
-                        </p>
-                    </div>
-
-                    <a href="/deliveries" class="view-all">
-                        View all
-                    </a>
-
-                </div>
-
-
-                {% if delayed_deliveries %}
-
-                <div class="table-wrapper">
-
-                    <table class="deliveries-table">
-
-                        <thead>
-                            <tr>
-                                <th>Tracking ID</th>
-                                <th>Customer</th>
-                                <th>Destination</th>
-                                <th>Driver</th>
-                                <th>Status</th>
-                                <th>Estimated Delivery</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-
-                            {% for delivery in delayed_deliveries[:10] %}
-
-                            <tr>
-
-                                <td>
-                                    <a
-                                        href="/deliveries/{{ delivery.id }}"
-                                        class="tracking-link"
-                                    >
-                                        {{ delivery.tracking_number }}
-                                    </a>
-                                </td>
-
-                                <td>
-                                    {% if delivery.customer %}
-                                        {{ delivery.customer.name }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    {{ delivery.delivery_address }}
-                                </td>
-
-                                <td>
-                                    {% if delivery.driver %}
-                                        {{ delivery.driver.name }}
-                                    {% else %}
-                                        <span class="unassigned">
-                                            Unassigned
-                                        </span>
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    <span class="status-badge status-{{ delivery.status }}">
-                                        {{ delivery.status.replace("_", " ").title() }}
-                                    </span>
-                                </td>
-
-                                <td>
-                                    {% if delivery.scheduled_at %}
-                                        {{ delivery.scheduled_at.strftime("%d %b %Y, %H:%M") }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    <a
-                                        href="/deliveries/{{ delivery.id }}"
-                                        class="action-link"
-                                    >
-                                        View
-                                    </a>
-                                </td>
-
-                            </tr>
-
-                            {% endfor %}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-                {% else %}
-
-                <div class="empty-state">
-
-                    <h4>
-                        No delayed deliveries
-                    </h4>
-
-                    <p>
-                        All scheduled deliveries are currently on time.
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-            </section>
-
-
-            <!-- RECENT DELIVERIES -->
-
-            <section class="dashboard-card recent-card">
-
-                <div class="card-header">
-
-                    <div>
-                        <h3>Recent Deliveries</h3>
-
-                        <p>
-                            Your latest delivery activity.
-                        </p>
-                    </div>
-
-                    <a href="/deliveries" class="view-all">
-                        View all
-                    </a>
-
-                </div>
-
-
-                {% if recent_deliveries %}
-
-                <div class="table-wrapper">
-
-                    <table class="deliveries-table">
-
-                        <thead>
-
-                            <tr>
-                                <th>Tracking ID</th>
-                                <th>Customer</th>
-                                <th>Destination</th>
-                                <th>Driver</th>
-                                <th>Status</th>
-                                <th>Estimated Delivery</th>
-                                <th>Created</th>
-                                <th>Action</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            {% for delivery in recent_deliveries %}
-
-                            <tr>
-
-                                <td>
-                                    <a
-                                        href="/deliveries/{{ delivery.id }}"
-                                        class="tracking-link"
-                                    >
-                                        {{ delivery.tracking_number }}
-                                    </a>
-                                </td>
-
-                                <td>
-                                    {% if delivery.customer %}
-                                        {{ delivery.customer.name }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    {{ delivery.delivery_address }}
-                                </td>
-
-                                <td>
-                                    {% if delivery.driver %}
-                                        {{ delivery.driver.name }}
-                                    {% else %}
-                                        <span class="unassigned">
-                                            Unassigned
-                                        </span>
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    <span class="status-badge status-{{ delivery.status }}">
-                                        {{ delivery.status.replace("_", " ").title() }}
-                                    </span>
-                                </td>
-
-                                <td>
-                                    {% if delivery.scheduled_at %}
-                                        {{ delivery.scheduled_at.strftime("%d %b %Y, %H:%M") }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    {% if delivery.created_at %}
-                                        {{ delivery.created_at.strftime("%d %b %Y, %H:%M") }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    <a
-                                        href="/deliveries/{{ delivery.id }}"
-                                        class="action-link"
-                                    >
-                                        View
-                                    </a>
-                                </td>
-
-                            </tr>
-
-                            {% endfor %}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-                {% else %}
-
-                <div class="empty-state">
-
-                    <h4>
-                        No deliveries yet
-                    </h4>
-
-                    <p>
-                        Your recent deliveries will appear here.
-                    </p>
-
-                    <a
-                        href="/deliveries/new"
-                        class="primary-button"
-                    >
-                        Create your first delivery
-                    </a>
-
-                </div>
-
-                {% endif %}
-
-            </section>
+            {% endif %}
 
         </section>
 
-    </main>
+        <section class="dashboard-card recent-card">
+
+            <div class="card-header">
+
+                <div>
+                    <h3>Recent Deliveries</h3>
+                    <p>Your latest delivery activity.</p>
+                </div>
+
+                <a href="/deliveries" class="view-all">
+                    View all
+                </a>
+
+            </div>
+
+            {% if recent_deliveries %}
+
+            <div class="table-wrapper">
+
+                <table class="deliveries-table">
+
+                    <thead>
+                        <tr>
+                            <th>Tracking ID</th>
+                            <th>Customer</th>
+                            <th>Destination</th>
+                            <th>Driver</th>
+                            <th>Status</th>
+                            <th>Estimated Delivery</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for delivery in recent_deliveries %}
+
+                        <tr>
+
+                            <td>
+                                <a
+                                    href="/deliveries/{{ delivery.id }}"
+                                    class="tracking-link"
+                                >
+                                    {{ delivery.tracking_number }}
+                                </a>
+                            </td>
+
+                            <td>
+                                {% if delivery.customer %}
+                                    {{ delivery.customer.name }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>{{ delivery.delivery_address }}</td>
+
+                            <td>
+                                {% if delivery.driver %}
+                                    {{ delivery.driver.name }}
+                                {% else %}
+                                    <span class="unassigned">Unassigned</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <span class="status-badge status-{{ delivery.status }}">
+                                    {{ delivery.status.replace("_", " ").title() }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {% if delivery.scheduled_at %}
+                                    {{ delivery.scheduled_at.strftime("%d %b %Y, %H:%M") }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if delivery.created_at %}
+                                    {{ delivery.created_at.strftime("%d %b %Y, %H:%M") }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <a
+                                    href="/deliveries/{{ delivery.id }}"
+                                    class="action-link"
+                                >
+                                    View
+                                </a>
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="empty-state">
+
+                <h4>No deliveries yet</h4>
+
+                <p>Your recent deliveries will appear here.</p>
+
+                <a
+                    href="/deliveries/new"
+                    class="primary-button"
+                >
+                    Create your first delivery
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </section>
+
+    </section>
+
+</main>
 
 </div>
 
-
 <button
-    id="menuButton"
-    class="mobile-menu-button"
-    type="button"
-    aria-label="Open navigation"
->
-    ☰
-</button>
+id="menuButton"
+class="mobile-menu-button"
+type="button"
+aria-label="Open navigation"
 
+>
+
+☰
+
+</button>
 
 <script src="{{ url_for('static', path='js/app.js') }}"></script>
 
-
 <script>
-
 const statusLabels = [
     "Pending",
     "In Transit",
@@ -648,78 +528,47 @@ const statusLabels = [
     "Cancelled"
 ];
 
-const statusValues = [
-    {{ pending }},
-    {{ in_transit }},
-    {{ out_for_delivery }},
-    {{ delivered }},
-    {{ failed }},
-    {{ cancelled }}
-];
-
-const chartCanvas = document.getElementById(
-    "deliveryStatusChart"
+const statusValues = JSON.parse(
+    '{{ [pending, in_transit, out_for_delivery, delivered, failed, cancelled] | tojson }}'
 );
 
+const chartCanvas = document.getElementById("deliveryStatusChart");
+
 if (chartCanvas) {
-
     new Chart(chartCanvas, {
-
         type: "doughnut",
-
         data: {
-
             labels: statusLabels,
-
             datasets: [
                 {
                     data: statusValues,
                     borderWidth: 0
                 }
             ]
-
         },
-
         options: {
-
             responsive: true,
-
             maintainAspectRatio: false,
-
             plugins: {
-
                 legend: {
                     position: "bottom",
-
                     labels: {
                         padding: 20,
                         usePointStyle: true
                     }
                 },
-
                 tooltip: {
-
                     callbacks: {
-
                         label: function(context) {
-
                             const value = context.raw;
-
                             return " " + value + " deliveries";
                         }
-
                     }
-
                 }
-
             }
-
         }
-
     });
-
 }
-
 </script>
 
 </body>
