@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>{{ page_title }} - Delivery Dashboard</title>
 
     <link
@@ -16,152 +14,210 @@
 
 <body>
 
-<header class="topbar">
-    <div class="container">
-        <h1>Delivery Tracking Dashboard</h1>
+<div class="app-container">
 
-        <nav>
-            <a href="/dashboard">Dashboard</a>
-            <a href="/deliveries">Deliveries</a>
-            <a href="/customers">Customers</a>
-            <a href="/drivers">Drivers</a>
-            <a href="/reports">Reports</a>
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+            <div class="sidebar-logo">D</div>
+
+            <div>
+                <h2>Delivery</h2>
+                <span>Dashboard</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <a href="/dashboard" class="nav-item">
+                <span>▦</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/deliveries" class="nav-item">
+                <span>▤</span>
+                <span>Deliveries</span>
+            </a>
+
+            <a href="/customers" class="nav-item active">
+                <span>♙</span>
+                <span>Customers</span>
+            </a>
+
+            <a href="/drivers" class="nav-item">
+                <span>♟</span>
+                <span>Drivers</span>
+            </a>
+
+            <a href="/reports" class="nav-item">
+                <span>▥</span>
+                <span>Reports</span>
+            </a>
+
         </nav>
-    </div>
-</header>
 
-<main class="container">
+    </aside>
 
-    <div class="page-header">
-        <div>
-            <h2>Customers</h2>
-            <p>Manage delivery customers.</p>
-        </div>
+    <main class="main-content">
 
-        <a
-            href="/customers/new"
-            class="button primary"
-        >
-            + New Customer
-        </a>
-    </div>
+        <header class="top-header">
 
-    <section class="card">
-
-        <form
-            method="get"
-            action="/customers"
-            class="filters"
-        >
-            <div class="form-group">
-                <label for="search">Search</label>
-
-                <input
-                    type="text"
-                    id="search"
-                    name="search"
-                    value="{{ search }}"
-                    placeholder="Name, phone, email, address..."
-                >
+            <div>
+                <h1>Customers</h1>
+                <p>Manage delivery customers.</p>
             </div>
 
-            <div class="form-actions">
-                <button
-                    type="submit"
-                    class="button primary"
-                >
-                    Search
-                </button>
+            <a href="/customers/new" class="primary-button">
+                + New Customer
+            </a>
 
-                <a
-                    href="/customers"
-                    class="button secondary"
+        </header>
+
+        <section class="dashboard-content">
+
+            <div class="dashboard-card">
+
+                <div class="card-header">
+                    <div>
+                        <h2>Search Customers</h2>
+                        <p>Find customers by name, phone, email, or address.</p>
+                    </div>
+                </div>
+
+                <form
+                    method="get"
+                    action="/customers"
+                    class="filters"
                 >
-                    Clear
-                </a>
+
+                    <div class="form-group">
+                        <label for="search">Search</label>
+
+                        <input
+                            type="text"
+                            id="search"
+                            name="search"
+                            value="{{ search }}"
+                            placeholder="Name, phone, email, address..."
+                        >
+                    </div>
+
+                    <div class="form-actions">
+
+                        <button
+                            type="submit"
+                            class="primary-button"
+                        >
+                            Search
+                        </button>
+
+                        <a
+                            href="/customers"
+                            class="button secondary"
+                        >
+                            Clear
+                        </a>
+
+                    </div>
+
+                </form>
+
             </div>
-        </form>
 
-    </section>
+            <div class="dashboard-card">
 
-    <section class="card">
+                <div class="card-header">
 
-        <h3>All Customers</h3>
+                    <div>
+                        <h2>All Customers</h2>
+                        <p>{{ customers|length }} customers</p>
+                    </div>
 
-        <p>
-            {{ customers|length }} customers
-        </p>
+                </div>
 
-        {% if customers %}
+                {% if customers %}
 
-        <div class="table-responsive">
+                <div class="table-wrapper">
 
-            <table>
+                    <table class="deliveries-table">
 
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>Address</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
 
-                <tbody>
+                        <tbody>
 
-                    {% for customer in customers %}
+                            {% for customer in customers %}
 
-                    <tr>
-                        <td>
-                            <strong>
-                                {{ customer.name }}
-                            </strong>
-                        </td>
+                            <tr>
 
-                        <td>
-                            {{ customer.phone }}
-                        </td>
+                                <td>
+                                    <strong>{{ customer.name }}</strong>
+                                </td>
 
-                        <td>
-                            {{ customer.email or "—" }}
-                        </td>
+                                <td>
+                                    {{ customer.phone }}
+                                </td>
 
-                        <td>
-                            {{ customer.address }}
-                        </td>
+                                <td>
+                                    {{ customer.email or "—" }}
+                                </td>
 
-                        <td>
-                            <a
-                                href="/customers/{{ customer.id }}"
-                                class="button small"
-                            >
-                                View
-                            </a>
-                        </td>
-                    </tr>
+                                <td>
+                                    {{ customer.address }}
+                                </td>
 
-                    {% endfor %}
+                                <td>
+                                    <a
+                                        href="/customers/{{ customer.id }}"
+                                        class="button small"
+                                    >
+                                        View
+                                    </a>
+                                </td>
 
-                </tbody>
+                            </tr>
 
-            </table>
+                            {% endfor %}
 
-        </div>
+                        </tbody>
 
-        {% else %}
+                    </table>
 
-        <p>No customers found.</p>
+                </div>
 
-        {% endif %}
+                {% else %}
 
-    </section>
+                <div class="empty-state">
+                    <h3>No customers found</h3>
+                    <p>There are currently no customers matching your search.</p>
 
-</main>
+                    <a
+                        href="/customers/new"
+                        class="primary-button"
+                    >
+                        + Add Customer
+                    </a>
+                </div>
 
-<script
-    src="{{ url_for('static', path='js/app.js') }}"
-></script>
+                {% endif %}
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="{{ url_for('static', path='js/app.js') }}"></script>
 
 </body>
 </html>
+

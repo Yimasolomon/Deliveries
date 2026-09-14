@@ -12,6 +12,7 @@ from app.database import get_db
 from app.database_init import init_db
 from app.models import Customer, Delivery, Driver
 from app.routes.dashboard import router as dashboard_router
+from app.routes.reports import router as reports_router
 from app.services.customer_service import (
     CustomerNotFoundError,
     CustomerService,
@@ -503,6 +504,9 @@ async def update_delivery_status(
 
 app.include_router(
     dashboard_router
+)
+app.include_router(
+    reports_router
 )
 
 @app.post("/deliveries/{delivery_id}/delete")
