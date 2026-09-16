@@ -15,6 +15,14 @@ DATABASE_URL = os.getenv(
     f"sqlite:///{DATA_DIR / 'deliveries.db'}",
 )
 
+# Use psycopg (v3) with PostgreSQL.
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg://",
+        1,
+    )
+
 
 class Base(DeclarativeBase):
     pass
