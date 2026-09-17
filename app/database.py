@@ -10,9 +10,10 @@ DATA_DIR = BASE_DIR / "data"
 
 # Use an external DATABASE_URL in production.
 # Fall back to local SQLite during development.
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    f"sqlite:///{DATA_DIR / 'deliveries.db'}",
+DATABASE_URL = (
+    os.getenv("DATABASE_URL")
+    or os.getenv("DATABASE_URL_POSTGRES_URL")
+    or f"sqlite:///{DATA_DIR / 'deliveries.db'}"
 )
 
 # Use psycopg (v3) with PostgreSQL.
