@@ -149,53 +149,33 @@
                 name="status"
                 required
             >
-                <option value="pending"
-                    {% if delivery.status == "pending" %}
-                    selected
-                    {% endif %}
-                >
-                    Pending
+                <option value="{{ delivery.status }}" selected>
+                    {{ delivery.status.replace("_", " ").title() }}
                 </option>
 
-                <option value="in_transit"
-                    {% if delivery.status == "in_transit" %}
-                    selected
-                    {% endif %}
-                >
-                    In Transit
-                </option>
+                {% set status_labels = {
+                    "pending": "Pending",
+                    "in_transit": "In Transit",
+                    "out_for_delivery": "Out For Delivery",
+                    "delivered": "Delivered",
+                    "failed": "Failed",
+                    "cancelled": "Cancelled"
+                } %}
 
-                <option value="out_for_delivery"
-                    {% if delivery.status == "out_for_delivery" %}
-                    selected
+                {% for status in [
+                    "pending",
+                    "in_transit",
+                    "out_for_delivery",
+                    "delivered",
+                    "failed",
+                    "cancelled"
+                ] %}
+                    {% if status in allowed_statuses and status != delivery.status %}
+                    <option value="{{ status }}">
+                        {{ status_labels[status] }}
+                    </option>
                     {% endif %}
-                >
-                    Out For Delivery
-                </option>
-
-                <option value="delivered"
-                    {% if delivery.status == "delivered" %}
-                    selected
-                    {% endif %}
-                >
-                    Delivered
-                </option>
-
-                <option value="failed"
-                    {% if delivery.status == "failed" %}
-                    selected
-                    {% endif %}
-                >
-                    Failed
-                </option>
-
-                <option value="cancelled"
-                    {% if delivery.status == "cancelled" %}
-                    selected
-                    {% endif %}
-                >
-                    Cancelled
-                </option>
+                {% endfor %}
             </select>
 
         </div>

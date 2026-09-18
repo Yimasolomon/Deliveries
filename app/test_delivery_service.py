@@ -318,7 +318,6 @@ def test_cancel_delivery_cannot_cancel_already_cancelled_delivery(db):
             delivery_id=delivery.id,
         )
 
-        cat >> app/test_delivery_service.py <<'EOF'
 
 
 def test_update_status_allows_valid_transition(db):
@@ -533,3 +532,264 @@ def test_update_status_allows_cancellation_from_active_delivery(db):
 
     assert history[-1].status == "cancelled"
     assert history[-1].note == "Customer cancelled the order."
+
+def test_terminal_delivery_releases_driver(db):
+    service = DeliveryService(db)
+
+    customer = Customer(
+        name="Release Customer",
+        phone="08000000001",
+        address="Test Address",
+    )
+
+    driver = Driver(
+        name="Release Driver",
+        phone="08000000002",
+        vehicle_type="Motorcycle",
+        vehicle_number="REL-001",
+        status="available",
+    )
+
+    db.add_all([customer, driver])
+    db.commit()
+    db.refresh(customer)
+    db.refresh(driver)
+
+    delivery = service.create_delivery(
+        customer_id=customer.id,
+        driver_id=driver.id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+    )
+
+    db.refresh(driver)
+    assert driver.status == "busy"
+
+    service.update_status(
+        delivery_id=delivery.id,
+        new_status="in_transit",
+    )
+    service.update_status(
+        delivery_id=delivery.id,
+        new_status="out_for_delivery",
+    )
+    service.update_status(
+        delivery_id=delivery.id,
+        new_status="delivered",
+    )
+
+    db.refresh(driver)
+
+    assert driver.status == "available"
+
+
+@pytest.mark.parametrize("terminal_status", ["failed", "cancelled"])
+def test_failed_or_cancelled_delivery_releases_driver(db, terminal_status):
+    service = DeliveryService(db)
+
+    customer = Customer(
+        name="Release Customer",
+        phone="08000000003",
+        address="Test Address",
+    )
+
+    driver = Driver(
+        name="Release Driver",
+        phone="08000000004",
+        vehicle_type="Motorcycle",
+        vehicle_number="REL-002",
+        status="available",
+    )
+
+    db.add_all([customer, driver])
+    db.commit()
+    db.refresh(customer)
+    db.refresh(driver)
+
+    delivery = service.create_delivery(
+        customer_id=customer.id,
+        driver_id=driver.id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+    )
+
+    db.refresh(driver)
+    assert driver.status == "busy"
+
+    service.update_status(
+        delivery_id=delivery.id,
+        new_status="in_transit",
+    )
+    service.update_status(
+        delivery_id=delivery.id,
+        new_status="out_for_delivery",
+    )
+    service.update_status(
+        delivery_id=delivery.id,
+        new_status=terminal_status,
+    )
+
+    db.refresh(driver)
+
+    assert driver.status == "available"
+
+def test_reassign_active_delivery_updates_driver_statuses(db):
+    service = DeliveryService(db)
+
+    customer = Customer(
+        name="Reassign Customer",
+        phone="08000000005",
+        address="Test Address",
+    )
+
+    old_driver = Driver(
+        name="Old Driver",
+        phone="08000000006",
+        vehicle_type="Motorcycle",
+        vehicle_number="REL-003",
+        status="available",
+    )
+
+    new_driver = Driver(
+        name="New Driver",
+        phone="08000000007",
+        vehicle_type="Motorcycle",
+        vehicle_number="REL-004",
+        status="available",
+    )
+
+    db.add_all([customer, old_driver, new_driver])
+    db.commit()
+    db.refresh(customer)
+    db.refresh(old_driver)
+    db.refresh(new_driver)
+
+    delivery = service.create_delivery(
+        customer_id=customer.id,
+        driver_id=old_driver.id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+    )
+
+    db.refresh(old_driver)
+    db.refresh(new_driver)
+
+    assert old_driver.status == "busy"
+    assert new_driver.status == "available"
+
+    updated = service.update_delivery(
+        delivery_id=delivery.id,
+        customer_id=customer.id,
+        driver_id=new_driver.id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+    )
+
+    db.refresh(old_driver)
+    db.refresh(new_driver)
+
+    assert updated.driver_id == new_driver.id
+    assert old_driver.status == "available"
+    assert new_driver.status == "busy"
+
+
+def test_unassign_active_delivery_releases_driver(db):
+    service = DeliveryService(db)
+
+    customer = Customer(
+        name="Unassign Customer",
+        phone="08000000008",
+        address="Test Address",
+    )
+
+    driver = Driver(
+        name="Unassign Driver",
+        phone="08000000009",
+        vehicle_type="Motorcycle",
+        vehicle_number="REL-005",
+        status="available",
+    )
+
+    db.add_all([customer, driver])
+    db.commit()
+    db.refresh(customer)
+    db.refresh(driver)
+
+    delivery = service.create_delivery(
+        customer_id=customer.id,
+        driver_id=driver.id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+    )
+
+    db.refresh(driver)
+    assert driver.status == "busy"
+
+    updated = service.update_delivery(
+        delivery_id=delivery.id,
+        customer_id=customer.id,
+        driver_id=None,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+    )
+
+    db.refresh(driver)
+
+    assert updated.driver_id is None
+    assert driver.status == "available"
+
+
+def test_cannot_reassign_active_delivery_to_busy_driver(db):
+    service = DeliveryService(db)
+
+    customer = Customer(
+        name="Busy Driver Customer",
+        phone="08000000010",
+        address="Test Address",
+    )
+
+    current_driver = Driver(
+        name="Current Driver",
+        phone="08000000011",
+        vehicle_type="Motorcycle",
+        vehicle_number="REL-006",
+        status="available",
+    )
+
+    busy_driver = Driver(
+        name="Busy Driver",
+        phone="08000000012",
+        vehicle_type="Motorcycle",
+        vehicle_number="REL-007",
+        status="busy",
+    )
+
+    db.add_all([customer, current_driver, busy_driver])
+    db.commit()
+    db.refresh(customer)
+    db.refresh(current_driver)
+    db.refresh(busy_driver)
+
+    delivery = service.create_delivery(
+        customer_id=customer.id,
+        driver_id=current_driver.id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+    )
+
+    with pytest.raises(DriverUnavailableError):
+        service.update_delivery(
+            delivery_id=delivery.id,
+            customer_id=customer.id,
+            driver_id=busy_driver.id,
+            pickup_address="Ikeja",
+            delivery_address="Lekki",
+        )
+
+    db.refresh(delivery)
+    db.refresh(current_driver)
+    db.refresh(busy_driver)
+
+    assert delivery.driver_id == current_driver.id
+    assert current_driver.status == "busy"
+    assert busy_driver.status == "busy"    

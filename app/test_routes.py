@@ -851,6 +851,73 @@ def test_edit_delivery_form_loads(
     assert "Route Customer" in response.text
     assert "Route Driver" in response.text
 
+def test_edit_delivery_form_filters_drivers(
+    seeded_customer_driver,
+):
+    client, session_factory, customer_id, current_driver_id = (
+        seeded_customer_driver
+    )
+
+    db = session_factory()
+
+    current_driver = db.get(Driver, current_driver_id)
+
+    available_driver = Driver(
+        name="Available Driver",
+        phone="09100002002",
+        vehicle_type="Motorcycle",
+        vehicle_number="AVAILABLE-001",
+        status="available",
+    )
+
+    busy_driver = Driver(
+        name="Other Busy Driver",
+        phone="09100002003",
+        vehicle_type="Motorcycle",
+        vehicle_number="BUSY-001",
+        status="busy",
+    )
+
+    db.add_all([available_driver, busy_driver])
+    db.commit()
+    db.refresh(available_driver)
+    db.refresh(busy_driver)
+
+    current_driver.status = "busy"
+
+    delivery = Delivery(
+        tracking_number="DLV-EDIT-FILTER-001",
+        customer_id=customer_id,
+        driver_id=current_driver_id,
+        pickup_address="Ikeja",
+        delivery_address="Lekki",
+        status="pending",
+    )
+
+    db.add(delivery)
+    db.commit()
+    db.refresh(delivery)
+
+    delivery_id = delivery.id
+
+    db.close()
+
+    response = client.get(
+        f"/deliveries/{delivery_id}/edit"
+    )
+
+    assert response.status_code == 200
+
+    assert "Route Driver" in response.text
+    assert "Available Driver" in response.text
+
+    assert "Other Busy Driver" not in response.text
+
+    assert (
+        f'value="{current_driver_id}"'
+        in response.text
+    )
+
 
 def test_edit_delivery_missing_returns_404(route_client):
     client, _ = route_client

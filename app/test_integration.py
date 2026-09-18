@@ -10,8 +10,10 @@ from app.services.delivery_service import (
     DeliveryService,
     InvalidStatusError,
 )
-from app.services.driver_service import DriverService
-
+from app.services.driver_service import (
+    DriverService,
+    InvalidDriverStatusError,
+)
 
 def create_customer(db):
     return CustomerService(db).create_customer(
@@ -22,15 +24,20 @@ def create_customer(db):
     )
 
 
-def create_driver(db):
+def create_driver(
+    db,
+    *,
+    name="Integration Driver",
+    phone="09000002001",
+    vehicle_number="INT-001",
+):
     return DriverService(db).create_driver(
-        name="Integration Driver",
-        phone="09000002001",
+        name=name,
+        phone=phone,
         vehicle_type="Motorcycle",
-        vehicle_number="INT-001",
+        vehicle_number=vehicle_number,
         status="available",
     )
-
 
 def create_delivery(db, scheduled_at=None):
     customer = create_customer(db)
@@ -129,7 +136,7 @@ def test_invalid_status_transition_is_rejected(db):
             delivery_id=delivery.id,
             new_status="delivered",
         )
-        
+
 def test_delayed_delivery_is_detected(db):
     scheduled_at = datetime.now(UTC) - timedelta(hours=1)
 
@@ -193,13 +200,19 @@ def test_cancelled_delivery_is_not_delayed(db):
 
 def test_dashboard_reflects_delivery_statuses(db):
     customer = create_customer(db)
-    driver = create_driver(db)
+    pending_driver = create_driver(db)
+    delivered_driver = create_driver(
+        db,
+        name="Integration Driver 2",
+        phone="09000002002",
+        vehicle_number="INT-002",
+    )
 
     service = DeliveryService(db)
 
     pending = service.create_delivery(
         customer_id=customer.id,
-        driver_id=driver.id,
+        driver_id=pending_driver.id,
         pickup_address="Ikeja",
         delivery_address="Lekki",
         scheduled_at=datetime.now(UTC) + timedelta(hours=2),
@@ -207,7 +220,7 @@ def test_dashboard_reflects_delivery_statuses(db):
 
     delivered = service.create_delivery(
         customer_id=customer.id,
-        driver_id=driver.id,
+        driver_id=delivered_driver.id,
         pickup_address="Ikeja",
         delivery_address="Yaba",
         scheduled_at=datetime.now(UTC) + timedelta(hours=2),
@@ -298,22 +311,79 @@ def test_delivery_relationships_are_persisted(db):
 
 def test_tracking_numbers_are_unique(db):
     customer = create_customer(db)
-    driver = create_driver(db)
-
+    first_driver = create_driver(db)
+    second_driver = create_driver(
+        db,
+        name="Integration Driver 2",
+        phone="09000002002",
+        vehicle_number="INT-002",
+    )
     service = DeliveryService(db)
 
     first = service.create_delivery(
         customer_id=customer.id,
-        driver_id=driver.id,
+        driver_id=first_driver.id,
         pickup_address="Ikeja",
         delivery_address="Lekki",
     )
 
     second = service.create_delivery(
         customer_id=customer.id,
-        driver_id=driver.id,
+        driver_id=second_driver.id,
         pickup_address="Yaba",
         delivery_address="Ikoyi",
     )
 
     assert first.tracking_number != second.tracking_number
+
+def test_driver_cannot_be_marked_available_with_active_delivery(db):
+    delivery, customer, driver = create_delivery(db)
+
+    assert driver.status == "busy"
+
+    with pytest.raises(InvalidDriverStatusError):
+        DriverService(db).update_driver(
+            driver_id=driver.id,
+            name=driver.name,
+            phone=driver.phone,
+            vehicle_type=driver.vehicle_type,
+            vehicle_number=driver.vehicle_number,
+            status="available",
+        )
+
+    db.refresh(driver)
+    assert driver.status == "busy"
+    assert delivery.status == "pending"
+
+
+def test_driver_can_be_marked_available_after_delivery_is_terminal(db):
+    delivery, customer, driver = create_delivery(db)
+
+    assert driver.status == "busy"
+
+    DeliveryService(db).update_status(
+        delivery_id=delivery.id,
+        new_status="in_transit",
+    )
+    DeliveryService(db).update_status(
+        delivery_id=delivery.id,
+        new_status="out_for_delivery",
+    )
+    DeliveryService(db).update_status(
+        delivery_id=delivery.id,
+        new_status="delivered",
+    )
+
+    db.refresh(driver)
+    assert driver.status == "available"
+
+    updated_driver = DriverService(db).update_driver(
+        driver_id=driver.id,
+        name=driver.name,
+        phone=driver.phone,
+        vehicle_type=driver.vehicle_type,
+        vehicle_number=driver.vehicle_number,
+        status="available",
+    )
+
+    assert updated_driver.status == "available"

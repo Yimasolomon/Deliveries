@@ -58,7 +58,6 @@ class CustomerRepository:
             .order_by(Delivery.created_at.desc())
         )
         return list(self.db.scalars(statement).all())
-        
 
 class DriverRepository:
     def __init__(self, db: Session):
@@ -99,6 +98,25 @@ class DriverRepository:
             .order_by(Delivery.created_at.desc())
         )
         return list(self.db.scalars(statement).all())
+
+    def count_active_deliveries(
+        self,
+        driver_id: int,
+        exclude_delivery_id: int | None = None,
+    ) -> int:
+        statement = select(Delivery).where(
+            Delivery.driver_id == driver_id,
+            Delivery.status.not_in(
+                {"delivered", "failed", "cancelled"}
+            ),
+        )
+
+        if exclude_delivery_id is not None:
+            statement = statement.where(
+                Delivery.id != exclude_delivery_id
+            )
+
+        return len(list(self.db.scalars(statement).all()))
 
 class DeliveryRepository:
     def __init__(self, db: Session):

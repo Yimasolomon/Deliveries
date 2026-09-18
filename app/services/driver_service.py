@@ -118,6 +118,7 @@ class DriverService:
                 f"Invalid driver status: {status}."
             )
 
+
         if self.drivers.get_by_phone(phone):
             raise DuplicateDriverError(
                 "A driver with this phone number already exists."
@@ -196,6 +197,17 @@ class DriverService:
             )
 
         existing_phone = self.drivers.get_by_phone(phone)
+
+        if status == "available":
+            active_deliveries = self.drivers.count_active_deliveries(
+                driver.id
+            )
+
+        if active_deliveries > 0:
+            raise InvalidDriverStatusError(
+                "Driver cannot be marked as available "
+                "while they have active deliveries."
+            )
 
         if (
             existing_phone is not None
