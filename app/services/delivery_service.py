@@ -172,6 +172,9 @@ class DeliveryService:
 
             self.status_history.add(history)
 
+            if driver is not None:
+                driver.status = "busy"
+
             self.db.commit()
             self.db.refresh(delivery)
 

@@ -22,15 +22,20 @@ def create_customer(db):
     )
 
 
-def create_driver(db):
+def create_driver(
+    db,
+    *,
+    name="Integration Driver",
+    phone="09000002001",
+    vehicle_number="INT-001",
+):
     return DriverService(db).create_driver(
-        name="Integration Driver",
-        phone="09000002001",
+        name=name,
+        phone=phone,
         vehicle_type="Motorcycle",
-        vehicle_number="INT-001",
+        vehicle_number=vehicle_number,
         status="available",
     )
-
 
 def create_delivery(db, scheduled_at=None):
     customer = create_customer(db)
@@ -193,13 +198,19 @@ def test_cancelled_delivery_is_not_delayed(db):
 
 def test_dashboard_reflects_delivery_statuses(db):
     customer = create_customer(db)
-    driver = create_driver(db)
-
+    pending_driver = create_driver(db)
+    delivered_driver = create_driver(
+        db,
+        name="Integration Driver 2",
+        phone="09000002002",
+        vehicle_number="INT-002",
+    )    
+    
     service = DeliveryService(db)
 
     pending = service.create_delivery(
         customer_id=customer.id,
-        driver_id=driver.id,
+        driver_id=pending_driver.id,
         pickup_address="Ikeja",
         delivery_address="Lekki",
         scheduled_at=datetime.now(UTC) + timedelta(hours=2),
@@ -207,7 +218,7 @@ def test_dashboard_reflects_delivery_statuses(db):
 
     delivered = service.create_delivery(
         customer_id=customer.id,
-        driver_id=driver.id,
+        driver_id=delivered_driver.id,
         pickup_address="Ikeja",
         delivery_address="Yaba",
         scheduled_at=datetime.now(UTC) + timedelta(hours=2),
@@ -298,20 +309,25 @@ def test_delivery_relationships_are_persisted(db):
 
 def test_tracking_numbers_are_unique(db):
     customer = create_customer(db)
-    driver = create_driver(db)
-
+    first_driver = create_driver(db)
+    second_driver = create_driver(
+        db,
+        name="Integration Driver 2",
+        phone="09000002002",
+        vehicle_number="INT-002",
+    )
     service = DeliveryService(db)
 
     first = service.create_delivery(
         customer_id=customer.id,
-        driver_id=driver.id,
+        driver_id=first_driver.id,
         pickup_address="Ikeja",
         delivery_address="Lekki",
     )
 
     second = service.create_delivery(
         customer_id=customer.id,
-        driver_id=driver.id,
+        driver_id=second_driver.id,
         pickup_address="Yaba",
         delivery_address="Ikoyi",
     )
