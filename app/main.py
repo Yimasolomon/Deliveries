@@ -318,6 +318,10 @@ async def delivery_detail(
 
     service = DeliveryService(db)
     history = service.get_status_history(delivery_id)
+    allowed_statuses = service.ALLOWED_TRANSITIONS.get(
+        delivery.status,
+        set(),
+    )
 
     return templates.TemplateResponse(
         request=request,
@@ -327,6 +331,7 @@ async def delivery_detail(
             "page_title": f"Delivery {delivery.tracking_number}",
             "delivery": delivery,
             "history": history,
+            "allowed_statuses": allowed_statuses,
         },
     )
 
@@ -490,6 +495,10 @@ async def update_delivery_status(
             )
 
         history = service.get_status_history(delivery_id)
+        allowed_statuses = service.ALLOWED_TRANSITIONS.get(
+            delivery.status,
+            set(),
+        )
 
         return templates.TemplateResponse(
             request=request,
@@ -501,6 +510,7 @@ async def update_delivery_status(
                 ),
                 "delivery": delivery,
                 "history": history,
+                "allowed_statuses": allowed_statuses,
                 "error": str(exc),
             },
             status_code=400,
