@@ -358,6 +358,10 @@ async def edit_delivery_form(
 
     drivers = (
         db.query(Driver)
+        .filter(
+            (Driver.status == "available")
+            | (Driver.id == delivery.driver_id)
+        )
         .order_by(Driver.name)
         .all()
     )
