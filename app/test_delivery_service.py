@@ -318,7 +318,6 @@ def test_cancel_delivery_cannot_cancel_already_cancelled_delivery(db):
             delivery_id=delivery.id,
         )
 
-        cat >> app/test_delivery_service.py <<'EOF'
 
 
 def test_update_status_allows_valid_transition(db):
