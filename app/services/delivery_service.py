@@ -287,12 +287,28 @@ class DeliveryService:
             )
 
         try:
+
             delivery.status = new_status
 
             if new_status == "delivered":
                 delivery.delivered_at = datetime.now(UTC)
             elif current_status == "delivered":
                 delivery.delivered_at = None
+
+            if (
+                new_status in {"delivered", "failed", "cancelled"}
+                and delivery.driver_id is not None
+            ):
+                driver = self.drivers.get_by_id(delivery.driver_id)
+
+                if driver is not None:
+                    active_deliveries = self.drivers.count_active_deliveries(
+                        driver.id,
+                        exclude_delivery_id=delivery.id,
+                    )
+
+                    if active_deliveries == 0:
+                        driver.status = "available"
 
             history = DeliveryStatusHistory(
                 delivery_id=delivery.id,
@@ -404,6 +420,13 @@ class DeliveryService:
                 f"Customer {customer_id} was not found."
             )
 
+        old_driver_id = delivery.driver_id
+        old_driver = (
+            self.drivers.get_by_id(old_driver_id)
+            if old_driver_id is not None
+            else None
+        )
+
         driver = None
 
         if driver_id is not None:
@@ -418,12 +441,37 @@ class DeliveryService:
             # status is no longer "available".
             if (
                 driver.status != "available"
-                and driver.id != delivery.driver_id
+                and driver.id != old_driver_id
             ):
                 raise DriverUnavailableError(
                     f"Driver '{driver.name}' is not available."
                 )
 
+        delivery.customer_id = customer.id
+        delivery.driver_id = driver.id if driver else None
+
+        active_delivery = delivery.status not in {
+            "delivered",
+            "failed",
+            "cancelled",
+        }
+
+        if active_delivery and driver_id != old_driver_id:
+            # Release the previous driver if they have no other
+            # active deliveries.
+            if old_driver is not None:
+                active_deliveries = self.drivers.count_active_deliveries(
+                    old_driver.id,
+                    exclude_delivery_id=delivery.id,
+                )
+
+                if active_deliveries == 0:
+                    old_driver.status = "available"
+
+            # The new driver becomes busy because this delivery is active.
+            if driver is not None:
+                driver.status = "busy"
+                
         delivery.customer_id = customer.id
         delivery.driver_id = driver.id if driver else None
         delivery.pickup_address = pickup_address
