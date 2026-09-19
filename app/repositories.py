@@ -29,19 +29,13 @@ class CustomerRepository:
         )
         return self.db.scalar(statement)
 
-    def get_by_phone(
-        self,
-        phone: str,
-    ) -> Customer | None:
+    def get_by_phone(self, phone: str) -> Customer | None:
         statement = select(Customer).where(
             Customer.phone == phone
         )
         return self.db.scalar(statement)
 
-    def get_by_email(
-        self,
-        email: str,
-    ) -> Customer | None:
+    def get_by_email(self, email: str) -> Customer | None:
         statement = select(Customer).where(
             Customer.email == email
         )
@@ -59,6 +53,7 @@ class CustomerRepository:
         )
         return list(self.db.scalars(statement).all())
 
+
 class DriverRepository:
     def __init__(self, db: Session):
         self.db = db
@@ -74,14 +69,21 @@ class DriverRepository:
         return driver
 
     def get_by_id(self, driver_id: int) -> Driver | None:
-        statement = select(Driver).where(Driver.id == driver_id)
+        statement = select(Driver).where(
+            Driver.id == driver_id
+        )
         return self.db.scalar(statement)
 
     def get_by_phone(self, phone: str) -> Driver | None:
-        statement = select(Driver).where(Driver.phone == phone)
+        statement = select(Driver).where(
+            Driver.phone == phone
+        )
         return self.db.scalar(statement)
 
-    def get_by_vehicle_number(self, vehicle_number: str) -> Driver | None:
+    def get_by_vehicle_number(
+        self,
+        vehicle_number: str,
+    ) -> Driver | None:
         statement = select(Driver).where(
             Driver.vehicle_number == vehicle_number
         )
@@ -116,7 +118,10 @@ class DriverRepository:
                 Delivery.id != exclude_delivery_id
             )
 
-        return len(list(self.db.scalars(statement).all()))
+        return len(
+            list(self.db.scalars(statement).all())
+        )
+
 
 class DeliveryRepository:
     def __init__(self, db: Session):
@@ -156,7 +161,9 @@ class DeliveryRepository:
             select(Delivery)
             .order_by(Delivery.id)
         )
-        return list(self.db.scalars(statement).all())
+        return list(
+            self.db.scalars(statement).all()
+        )
 
     def get_paginated(
         self,
@@ -170,7 +177,6 @@ class DeliveryRepository:
         Return one page of deliveries together with
         the total number of matching deliveries.
         """
-
         filters = []
 
         if search:
@@ -235,6 +241,24 @@ class DeliveryRepository:
 
         return deliveries, total
 
+    def search(
+        self,
+        *,
+        search: str | None = None,
+        status: str | None = None,
+        page: int = 1,
+        page_size: int = 10,
+    ) -> list[Delivery]:
+        deliveries, _ = self.get_paginated(
+            page=page,
+            page_size=page_size,
+            search=search,
+            status=status,
+        )
+
+        return deliveries
+
+
 class DeliveryStatusHistoryRepository:
     def __init__(self, db: Session):
         self.db = db
@@ -258,21 +282,23 @@ class DeliveryStatusHistoryRepository:
             .order_by(DeliveryStatusHistory.created_at)
         )
 
-        return list(self.db.scalars(statement).all())
+        return list(
+            self.db.scalars(statement).all()
+        )
+
 
 class DashboardRepository:
     def __init__(self, db: Session):
         self.db = db
 
     def count_deliveries(self) -> int:
-        from sqlalchemy import func
-
         statement = select(func.count(Delivery.id))
         return self.db.scalar(statement) or 0
 
-    def count_deliveries_by_status(self, status: str) -> int:
-        from sqlalchemy import func
-
+    def count_deliveries_by_status(
+        self,
+        status: str,
+    ) -> int:
         statement = (
             select(func.count(Delivery.id))
             .where(Delivery.status == status)
@@ -280,8 +306,6 @@ class DashboardRepository:
         return self.db.scalar(statement) or 0
 
     def get_all_deliveries(self) -> list[Delivery]:
-        from sqlalchemy.orm import joinedload
-
         statement = (
             select(Delivery)
             .options(
@@ -299,8 +323,6 @@ class DashboardRepository:
         self,
         limit: int = 10,
     ) -> list[Delivery]:
-        from sqlalchemy.orm import joinedload
-
         statement = (
             select(Delivery)
             .options(
@@ -316,20 +338,17 @@ class DashboardRepository:
         )
 
     def count_customers(self) -> int:
-        from sqlalchemy import func
-
         statement = select(func.count(Customer.id))
         return self.db.scalar(statement) or 0
 
     def count_drivers(self) -> int:
-        from sqlalchemy import func
-
         statement = select(func.count(Driver.id))
         return self.db.scalar(statement) or 0
 
-    def count_drivers_by_status(self, status: str) -> int:
-        from sqlalchemy import func
-
+    def count_drivers_by_status(
+        self,
+        status: str,
+    ) -> int:
         statement = (
             select(func.count(Driver.id))
             .where(Driver.status == status)

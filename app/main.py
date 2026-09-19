@@ -5,9 +5,14 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import text
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
@@ -128,6 +133,28 @@ async def health_check():
     return {
         "status": "ok",
     }
+
+
+@app.get("/ready")
+async def readiness_check(
+    db: Session = Depends(get_db),
+):
+    try:
+        db.execute(text("SELECT 1"))
+
+        return {
+            "status": "ready",
+        }
+
+    except Exception:
+        logger.exception("Readiness check failed")
+
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "not_ready",
+            },
+        )
 
 
 @app.get(
@@ -339,7 +366,10 @@ async def create_delivery(
         )
 
 
-@app.get("/deliveries/{delivery_id}", response_class=HTMLResponse)
+@app.get(
+    "/deliveries/{delivery_id}",
+    response_class=HTMLResponse,
+)
 async def delivery_detail(
     request: Request,
     delivery_id: int,
@@ -588,7 +618,10 @@ async def delete_delivery(
         )
 
 
-@app.get("/customers", response_class=HTMLResponse)
+@app.get(
+    "/customers",
+    response_class=HTMLResponse,
+)
 async def customers_page(
     request: Request,
     search: str | None = None,
@@ -673,7 +706,10 @@ async def create_customer(
         )
 
 
-@app.get("/customers/{customer_id}", response_class=HTMLResponse)
+@app.get(
+    "/customers/{customer_id}",
+    response_class=HTMLResponse,
+)
 def customer_detail(
     customer_id: int,
     request: Request,
@@ -784,7 +820,10 @@ async def edit_customer(
         )
 
 
-@app.get("/drivers", response_class=HTMLResponse)
+@app.get(
+    "/drivers",
+    response_class=HTMLResponse,
+)
 def drivers_page(
     request: Request,
     search: str | None = None,
@@ -810,7 +849,10 @@ def drivers_page(
     )
 
 
-@app.get("/drivers/new", response_class=HTMLResponse)
+@app.get(
+    "/drivers/new",
+    response_class=HTMLResponse,
+)
 def new_driver_page(
     request: Request,
 ):
@@ -823,7 +865,10 @@ def new_driver_page(
     )
 
 
-@app.post("/drivers", response_class=HTMLResponse)
+@app.post(
+    "/drivers",
+    response_class=HTMLResponse,
+)
 def create_driver(
     request: Request,
     name: str = Form(...),
@@ -873,7 +918,10 @@ def create_driver(
         )
 
 
-@app.get("/drivers/{driver_id}", response_class=HTMLResponse)
+@app.get(
+    "/drivers/{driver_id}",
+    response_class=HTMLResponse,
+)
 def driver_detail(
     driver_id: int,
     request: Request,
@@ -904,7 +952,10 @@ def driver_detail(
     )
 
 
-@app.get("/drivers/{driver_id}/edit", response_class=HTMLResponse)
+@app.get(
+    "/drivers/{driver_id}/edit",
+    response_class=HTMLResponse,
+)
 def edit_driver_page(
     driver_id: int,
     request: Request,
@@ -931,7 +982,10 @@ def edit_driver_page(
     )
 
 
-@app.post("/drivers/{driver_id}/edit", response_class=HTMLResponse)
+@app.post(
+    "/drivers/{driver_id}/edit",
+    response_class=HTMLResponse,
+)
 def edit_driver(
     driver_id: int,
     request: Request,
@@ -980,8 +1034,9 @@ def edit_driver(
             )
 
         return templates.TemplateResponse(
-            "driver_edit.html",
-            {
+            request=request,
+            name="driver_edit.html",
+            context={
                 "request": request,
                 "driver": driver,
                 "error": str(exc),
