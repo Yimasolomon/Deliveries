@@ -1,20 +1,26 @@
-.venv/
+# Python
 __pycache__/
 *.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Testing and coverage
 .pytest_cache/
 .coverage
 
+# Environment variables
 .env
 
+# Local databases
 data/*.db
 data/*.db-shm
 data/*.db-wal
 
+# IDEs
 .idea/
 .vscode/
-venv/
-__pycache__/
-*.pyc
-.env
 
+# Temporary files
 *.save
