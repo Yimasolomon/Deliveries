@@ -1,12 +1,16 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
+
+# Load environment variables from .env when available.
+load_dotenv()
 
 # Use an external DATABASE_URL in production.
 # Fall back to local SQLite during development.
@@ -36,6 +40,7 @@ connect_args = {}
 if DATABASE_URL.startswith("sqlite"):
     # Only create the local data directory when SQLite is being used.
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+
     connect_args = {
         "check_same_thread": False,
     }
@@ -61,4 +66,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
