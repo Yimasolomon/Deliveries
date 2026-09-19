@@ -39,7 +39,6 @@ def seeded_customer_driver(route_client):
     return client, session_factory, customer_id, driver_id
 
 
-
 def test_health_route(route_client):
     client, _ = route_client
 
@@ -75,6 +74,7 @@ def test_deliveries_route_loads(route_client):
 
     assert response.status_code == 200
     assert "Deliveries" in response.text
+
 
 def test_deliveries_search_by_tracking_number(
     seeded_customer_driver,
@@ -302,6 +302,7 @@ def test_deliveries_pagination(
     # Page 2 contains the remaining two deliveries.
     assert "DLV-PAGE-002" in second_page.text
     assert "DLV-PAGE-001" in second_page.text
+
 
 def test_deliveries_pagination_preserves_filters(
     seeded_customer_driver,
@@ -607,6 +608,7 @@ def test_invalid_delivery_status_route_returns_400(
     assert response.status_code == 400
     assert "Invalid" in response.text
 
+
 def test_delete_delivery_route_cancels_delivery(
     seeded_customer_driver,
 ):
@@ -706,6 +708,7 @@ def test_delete_delivery_route_rejects_terminal_delivery(
     assert response.status_code == 400
     assert "cannot be cancelled" in response.text.lower()
 
+
 def test_customers_route_loads(route_client):
     client, _ = route_client
 
@@ -713,6 +716,7 @@ def test_customers_route_loads(route_client):
 
     assert response.status_code == 200
     assert "Customers" in response.text
+
 
 def test_create_customer_route_persists_customer(route_client):
     client, session_factory = route_client
@@ -816,6 +820,7 @@ def test_create_driver_route_persists_driver(route_client):
 
     db.close()
 
+
 def test_edit_delivery_form_loads(
     seeded_customer_driver,
 ):
@@ -850,6 +855,7 @@ def test_edit_delivery_form_loads(
     assert "DLV-EDIT-001" in response.text
     assert "Route Customer" in response.text
     assert "Route Driver" in response.text
+
 
 def test_edit_delivery_form_filters_drivers(
     seeded_customer_driver,
@@ -1048,3 +1054,17 @@ def test_edit_delivery_rejects_missing_customer(
 
     assert response.status_code == 400
     assert "Customer 999999 was not found." in response.text
+
+
+def test_security_headers(route_client):
+    client, _ = route_client
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["X-Frame-Options"] == "DENY"
+    assert (
+        response.headers["Referrer-Policy"]
+        == "strict-origin-when-cross-origin"
+    )
