@@ -1,11 +1,18 @@
+import logging
+import time
+from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import or_
+from sqlalchemy import text
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
@@ -22,7 +29,6 @@ from app.services.delivery_service import (
     DeliveryService,
     DeliveryServiceError,
 )
-
 from app.services.driver_service import (
     DriverNotFoundError,
     DriverService,
@@ -32,14 +38,72 @@ from app.services.driver_service import (
     InvalidDriverStatusError,
 )
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+
+logger = logging.getLogger("delivery_dashboard")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
 
 
 app = FastAPI(
     title="Delivery Tracking Dashboard",
     description="Delivery management system",
     version="0.1.0",
+    lifespan=lifespan,
 )
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+    return response
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.perf_counter()
+
+    try:
+        response = await call_next(request)
+    except Exception:
+        duration = time.perf_counter() - start_time
+
+        logger.exception(
+            "Request failed: %s %s (%.3fs)",
+            request.method,
+            request.url.path,
+            duration,
+        )
+
+        raise
+
+    duration = time.perf_counter() - start_time
+
+    logger.info(
+        "Request: %s %s -> %s (%.3fs)",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration,
+    )
+
+    return response
 
 
 templates = Jinja2Templates(
@@ -56,11 +120,6 @@ app.mount(
 )
 
 
-@app.on_event("startup")
-def startup():
-    init_db()
-
-
 @app.get("/")
 async def root():
     return RedirectResponse(
@@ -74,6 +133,28 @@ async def health_check():
     return {
         "status": "ok",
     }
+
+
+@app.get("/ready")
+async def readiness_check(
+    db: Session = Depends(get_db),
+):
+    try:
+        db.execute(text("SELECT 1"))
+
+        return {
+            "status": "ready",
+        }
+
+    except Exception:
+        logger.exception("Readiness check failed")
+
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "not_ready",
+            },
+        )
 
 
 @app.get(
@@ -94,13 +175,11 @@ async def deliveries(
     if page < 1:
         page = 1
 
-    deliveries, total_deliveries = (
-        service.get_deliveries(
-            page=page,
-            page_size=page_size,
-            search=search,
-            status=status,
-        )
+    deliveries, total_deliveries = service.get_deliveries(
+        page=page,
+        page_size=page_size,
+        search=search,
+        status=status,
     )
 
     total_pages = max(
@@ -109,18 +188,14 @@ async def deliveries(
         // page_size,
     )
 
-    # If a user requests a page beyond the final page,
-    # show the final valid page.
     if page > total_pages and total_deliveries > 0:
         page = total_pages
 
-        deliveries, total_deliveries = (
-            service.get_deliveries(
-                page=page,
-                page_size=page_size,
-                search=search,
-                status=status,
-            )
+        deliveries, total_deliveries = service.get_deliveries(
+            page=page,
+            page_size=page_size,
+            search=search,
+            status=status,
         )
 
     delayed_delivery_ids = {
@@ -149,14 +224,13 @@ async def deliveries(
             "selected_status": status or "",
             "statuses": statuses,
             "delayed_delivery_ids": delayed_delivery_ids,
-
-            # Pagination
             "page": page,
             "page_size": page_size,
             "total_deliveries": total_deliveries,
             "total_pages": total_pages,
         },
     )
+
 
 @app.get("/deliveries/new", response_class=HTMLResponse)
 async def new_delivery_form(
@@ -204,8 +278,6 @@ async def create_delivery(
 
     if scheduled_at:
         try:
-            from datetime import datetime
-
             scheduled_datetime = datetime.fromisoformat(
                 scheduled_at
             )
@@ -294,7 +366,10 @@ async def create_delivery(
         )
 
 
-@app.get("/deliveries/{delivery_id}", response_class=HTMLResponse)
+@app.get(
+    "/deliveries/{delivery_id}",
+    response_class=HTMLResponse,
+)
 async def delivery_detail(
     request: Request,
     delivery_id: int,
@@ -335,12 +410,13 @@ async def delivery_detail(
         },
     )
 
+
 @app.get(
     "/deliveries/{delivery_id}/edit",
     response_class=HTMLResponse,
 )
 async def edit_delivery_form(
-        request: Request,
+    request: Request,
     delivery_id: int,
     db: Session = Depends(get_db),
 ):
@@ -376,15 +452,14 @@ async def edit_delivery_form(
         name="delivery_edit.html",
         context={
             "request": request,
-            "page_title": (
-                f"Edit {delivery.tracking_number}"
-            ),
+            "page_title": f"Edit {delivery.tracking_number}",
             "delivery": delivery,
             "customers": customers,
             "drivers": drivers,
             "error": None,
         },
     )
+
 
 @app.post("/deliveries/{delivery_id}/edit")
 async def edit_delivery(
@@ -444,9 +519,7 @@ async def edit_delivery(
             name="delivery_edit.html",
             context={
                 "request": request,
-                "page_title": (
-                    f"Edit {delivery.tracking_number}"
-                ),
+                "page_title": f"Edit {delivery.tracking_number}",
                 "delivery": delivery,
                 "customers": customers,
                 "drivers": drivers,
@@ -454,6 +527,7 @@ async def edit_delivery(
             },
             status_code=400,
         )
+
 
 @app.post("/deliveries/{delivery_id}/status")
 async def update_delivery_status(
@@ -505,9 +579,7 @@ async def update_delivery_status(
             name="delivery_detail.html",
             context={
                 "request": request,
-                "page_title": (
-                    f"Delivery {delivery.tracking_number}"
-                ),
+                "page_title": f"Delivery {delivery.tracking_number}",
                 "delivery": delivery,
                 "history": history,
                 "allowed_statuses": allowed_statuses,
@@ -516,12 +588,10 @@ async def update_delivery_status(
             status_code=400,
         )
 
-app.include_router(
-    dashboard_router
-)
-app.include_router(
-    reports_router
-)
+
+app.include_router(dashboard_router)
+app.include_router(reports_router)
+
 
 @app.post("/deliveries/{delivery_id}/delete")
 async def delete_delivery(
@@ -547,7 +617,11 @@ async def delete_delivery(
             status_code=400,
         )
 
-@app.get("/customers", response_class=HTMLResponse)
+
+@app.get(
+    "/customers",
+    response_class=HTMLResponse,
+)
 async def customers_page(
     request: Request,
     search: str | None = None,
@@ -568,6 +642,7 @@ async def customers_page(
         },
     )
 
+
 @app.get(
     "/customers/new",
     response_class=HTMLResponse,
@@ -585,6 +660,7 @@ async def new_customer_form(
             "error": None,
         },
     )
+
 
 @app.post("/customers")
 async def create_customer(
@@ -630,7 +706,10 @@ async def create_customer(
         )
 
 
-@app.get("/customers/{customer_id}", response_class=HTMLResponse)
+@app.get(
+    "/customers/{customer_id}",
+    response_class=HTMLResponse,
+)
 def customer_detail(
     customer_id: int,
     request: Request,
@@ -659,6 +738,7 @@ def customer_detail(
             "stats": stats,
         },
     )
+
 
 @app.get(
     "/customers/{customer_id}/edit",
@@ -690,6 +770,7 @@ async def edit_customer_form(
             "error": None,
         },
     )
+
 
 @app.post("/customers/{customer_id}/edit")
 async def edit_customer(
@@ -738,7 +819,11 @@ async def edit_customer(
             status_code=400,
         )
 
-@app.get("/drivers", response_class=HTMLResponse)
+
+@app.get(
+    "/drivers",
+    response_class=HTMLResponse,
+)
 def drivers_page(
     request: Request,
     search: str | None = None,
@@ -763,7 +848,11 @@ def drivers_page(
         },
     )
 
-@app.get("/drivers/new", response_class=HTMLResponse)
+
+@app.get(
+    "/drivers/new",
+    response_class=HTMLResponse,
+)
 def new_driver_page(
     request: Request,
 ):
@@ -775,7 +864,11 @@ def new_driver_page(
         },
     )
 
-@app.post("/drivers", response_class=HTMLResponse)
+
+@app.post(
+    "/drivers",
+    response_class=HTMLResponse,
+)
 def create_driver(
     request: Request,
     name: str = Form(...),
@@ -824,7 +917,11 @@ def create_driver(
             status_code=400,
         )
 
-@app.get("/drivers/{driver_id}", response_class=HTMLResponse)
+
+@app.get(
+    "/drivers/{driver_id}",
+    response_class=HTMLResponse,
+)
 def driver_detail(
     driver_id: int,
     request: Request,
@@ -854,7 +951,11 @@ def driver_detail(
         },
     )
 
-@app.get("/drivers/{driver_id}/edit", response_class=HTMLResponse)
+
+@app.get(
+    "/drivers/{driver_id}/edit",
+    response_class=HTMLResponse,
+)
 def edit_driver_page(
     driver_id: int,
     request: Request,
@@ -880,7 +981,11 @@ def edit_driver_page(
         },
     )
 
-@app.post("/drivers/{driver_id}/edit", response_class=HTMLResponse)
+
+@app.post(
+    "/drivers/{driver_id}/edit",
+    response_class=HTMLResponse,
+)
 def edit_driver(
     driver_id: int,
     request: Request,
@@ -929,14 +1034,16 @@ def edit_driver(
             )
 
         return templates.TemplateResponse(
-            "driver_edit.html",
-            {
+            request=request,
+            name="driver_edit.html",
+            context={
                 "request": request,
                 "driver": driver,
                 "error": str(exc),
             },
             status_code=400,
         )
+
 
 @app.post("/drivers/{driver_id}/status")
 def update_driver_status(

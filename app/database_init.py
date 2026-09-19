@@ -1,3 +1,5 @@
+import os
+
 from app.database import Base, engine
 from app.models import (
     Customer,
@@ -8,6 +10,16 @@ from app.models import (
 
 
 def init_db() -> None:
+    """
+    Initialize the database for development and testing.
+
+    Production databases should be managed with Alembic migrations.
+    """
+    environment = os.getenv("APP_ENV", "development").lower()
+
+    if environment == "production":
+        return
+
     Base.metadata.create_all(bind=engine)
 
 
