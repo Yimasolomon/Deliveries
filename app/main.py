@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
@@ -34,13 +35,17 @@ from app.services.driver_service import (
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
 
 app = FastAPI(
     title="Delivery Tracking Dashboard",
     description="Delivery management system",
     version="0.1.0",
+    lifespan=lifespan,
 )
-
 
 templates = Jinja2Templates(
     directory=str(BASE_DIR / "templates")
@@ -54,12 +59,6 @@ app.mount(
     ),
     name="static",
 )
-
-
-@app.on_event("startup")
-def startup():
-    init_db()
-
 
 @app.get("/")
 async def root():
