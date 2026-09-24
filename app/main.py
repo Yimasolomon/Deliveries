@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from app.session import add_session_middleware
 
 from app.database import get_db
 from app.database_init import init_db
@@ -52,6 +53,7 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+add_session_middleware(app)
 
 
 @app.middleware("http")
