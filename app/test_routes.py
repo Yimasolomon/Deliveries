@@ -2,8 +2,8 @@ from datetime import datetime, timedelta, UTC
 
 import pytest
 
-from app.models import Customer, Driver, Delivery, DeliveryStatusHistory
-
+from app.models import Customer, Driver, Delivery, DeliveryStatusHistory, User
+from app.security import hash_password
 
 @pytest.fixture
 def seeded_customer_driver(route_client):
@@ -67,6 +67,41 @@ def test_dashboard_requires_login(route_client):
 
     assert response.status_code == 303
     assert response.headers["location"] == "/login"
+
+
+def test_dashboard_authenticated_user_loads(route_client):
+    client, session_factory = route_client
+
+    db = session_factory()
+
+    user = User(
+        email="dashboard@example.com",
+        password_hash=hash_password("password123"),
+        role="admin",
+        is_active=True,
+    )
+
+    db.add(user)
+    db.commit()
+
+    db.close()
+
+    response = client.post(
+        "/login",
+        data={
+            "email": "dashboard@example.com",
+            "password": "password123",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/dashboard"
+
+    response = client.get("/dashboard")
+
+    assert response.status_code == 200
+    assert "Dashboard" in response.text
 
 def test_deliveries_route_loads(route_client):
     client, _ = route_client
