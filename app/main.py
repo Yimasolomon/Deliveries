@@ -17,6 +17,7 @@ from app.models import Customer, Driver
 from app.routes.dashboard import router as dashboard_router
 from app.routes.deliveries import router as deliveries_router
 from app.routes.reports import router as reports_router
+from app.routes.auth import router as auth_router
 from app.services.customer_service import (
     CustomerNotFoundError,
     CustomerService,
@@ -150,6 +151,7 @@ async def readiness_check(
 
 
 # Register application routers.
+app.include_router(auth_router)
 app.include_router(dashboard_router)
 app.include_router(reports_router)
 app.include_router(deliveries_router)
