@@ -3,6 +3,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies import require_login
+from app.models import User
 from app.services.dashboard_service import DashboardService
 
 
@@ -16,6 +18,7 @@ templates = Jinja2Templates(
 @router.get("/dashboard")
 async def dashboard(
     request: Request,
+    current_user: User = Depends(require_login),
     db: Session = Depends(get_db),
 ):
     service = DashboardService(db)
@@ -28,6 +31,7 @@ async def dashboard(
         context={
             "request": request,
             "page_title": "Dashboard",
+            "user": current_user,
             **dashboard_data,
         },
     )

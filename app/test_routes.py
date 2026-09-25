@@ -57,15 +57,16 @@ def test_root_redirects_to_dashboard(route_client):
     assert response.headers["location"] == "/dashboard"
 
 
-def test_dashboard_route_loads(route_client):
+def test_dashboard_requires_login(route_client):
     client, _ = route_client
 
-    response = client.get("/dashboard")
+    response = client.get(
+        "/dashboard",
+        follow_redirects=False,
+    )
 
-    assert response.status_code == 200
-    assert "Dashboard" in response.text
-    assert "Total Deliveries" in response.text
-
+    assert response.status_code == 303
+    assert response.headers["location"] == "/login"
 
 def test_deliveries_route_loads(route_client):
     client, _ = route_client
