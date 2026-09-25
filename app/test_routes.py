@@ -103,13 +103,58 @@ def test_dashboard_authenticated_user_loads(route_client):
     assert response.status_code == 200
     assert "Dashboard" in response.text
 
-def test_deliveries_route_loads(route_client):
-    client, _ = route_client
+def test_logout_clears_session(route_client):
+    client, session_factory = route_client
 
-    response = client.get("/deliveries")
+    db = session_factory()
 
-    assert response.status_code == 200
-    assert "Deliveries" in response.text
+    user = User(
+        email="logout@example.com",
+        password_hash=hash_password("password123"),
+        role="admin",
+        is_active=True,
+    )
+
+    db.add(user)
+    db.commit()
+
+    db.close()
+
+    response = client.post(
+        "/login",
+        data={
+            "email": "logout@example.com",
+            "password": "password123",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/dashboard"
+
+    response = client.post(
+        "/logout",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/login"
+
+    response = client.get(
+        "/dashboard",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/login"
+
+    def test_deliveries_route_loads(route_client):
+        client, _ = route_client
+
+        response = client.get("/deliveries")
+
+        assert response.status_code == 200
+        assert "Deliveries" in response.text
 
 
 def test_deliveries_search_by_tracking_number(
