@@ -6,8 +6,8 @@ from app.models import Customer, Driver, Delivery, DeliveryStatusHistory, User
 from app.security import hash_password
 
 @pytest.fixture
-def seeded_customer_driver(route_client):
-    client, session_factory = route_client
+def seeded_customer_driver(authenticated_client):
+    client, session_factory = authenticated_client
 
     db = session_factory()
 
@@ -156,13 +156,24 @@ def test_logout_clears_session(route_client):
         assert response.status_code == 200
         assert "Deliveries" in response.text
 
+def test_deliveries_requires_login(route_client):
+    client, _ = route_client
+
+    response = client.get(
+        "/deliveries",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/login"
 
 def test_deliveries_search_by_tracking_number(
+    authenticated_client,
     seeded_customer_driver,
 ):
-    client, session_factory, customer_id, driver_id = (
-        seeded_customer_driver
-    )
+    client, session_factory = authenticated_client
+
+    _, _, customer_id, driver_id = seeded_customer_driver
 
     db = session_factory()
 

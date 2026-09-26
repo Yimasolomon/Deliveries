@@ -41,6 +41,7 @@ textarea {
 .app-container {
     min-height: 100vh;
     display: flex;
+    align-items: stretch;
 }
 
 
@@ -50,11 +51,25 @@ textarea {
 
 .sidebar {
     width: 250px;
-    min-height: 100vh;
+    height: 100vh;
     background: #FFFFFF;
     border-right: 1px solid #E2E8F0;
     padding: 24px 16px;
     flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+}
+
+.sidebar-footer {
+    padding: 20px 10px 10px;
+    border-top: 1px solid #ddd;
 }
 
 .sidebar-header {
@@ -84,12 +99,6 @@ textarea {
     margin-top: 2px;
     color: #64748B;
     font-size: 12px;
-}
-
-.sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
 }
 
 .nav-item {
@@ -668,4 +677,10 @@ textarea {
     .dashboard-card {
         padding: 16px;
     }
+}
+
+.logout-btn {
+    width: 100%;
+    padding: 10px;
+    cursor: pointer;
 }

@@ -21,8 +21,8 @@ def test_people_summary(db):
     assert summary["total_drivers"] == 0
 
 
-def test_reports_page(route_client):
-    client, _ = route_client
+def test_reports_page(authenticated_client):
+    client, _ = authenticated_client
 
     response = client.get("/reports")
 

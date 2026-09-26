@@ -6,6 +6,9 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 
+from app.dependencies import require_login
+from app.models import User
+
 from app.database import get_db
 from app.models import Customer, Delivery, Driver
 from app.services.delivery_service import (
@@ -21,15 +24,13 @@ templates = Jinja2Templates(
     directory=str(BASE_DIR / "templates")
 )
 
-@router.get(
-    "/deliveries",
-    response_class=HTMLResponse,
-)
+@router.get("/deliveries")
 async def deliveries(
     request: Request,
     search: str | None = None,
     status: str | None = None,
     page: int = 1,
+    current_user: User = Depends(require_login),
     db: Session = Depends(get_db),
 ):
     service = DeliveryService(db)
