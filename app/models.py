@@ -1,9 +1,7 @@
 from datetime import datetime, UTC
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -15,6 +13,16 @@ class Customer(Base):
     id: Mapped[int] = mapped_column(
         primary_key=True,
         autoincrement=True,
+    )
+
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"),
+        unique=True,
+        nullable=True,
+    )
+
+    user: Mapped["User | None"] = relationship(
+        back_populates="customer",
     )
 
     name: Mapped[str] = mapped_column(
@@ -54,6 +62,16 @@ class Driver(Base):
     id: Mapped[int] = mapped_column(
         primary_key=True,
         autoincrement=True,
+    )
+
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"),
+        unique=True,
+        nullable=True,
+    )
+
+    user: Mapped["User | None"] = relationship(
+        back_populates="driver",
     )
 
     name: Mapped[str] = mapped_column(
@@ -224,7 +242,7 @@ class User(Base):
 
     role: Mapped[str] = mapped_column(
         String(30),
-        default="viewer",
+        default="customer",
         nullable=False,
     )
 
@@ -245,4 +263,14 @@ class User(Base):
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
         nullable=False,
+    )
+
+    customer: Mapped["Customer | None"] = relationship(
+        back_populates="user",
+        uselist=False,
+    )
+
+    driver: Mapped["Driver | None"] = relationship(
+        back_populates="user",
+        uselist=False,
     )

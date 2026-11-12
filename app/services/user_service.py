@@ -26,7 +26,8 @@ class UserService:
     VALID_ROLES = {
         "admin",
         "dispatcher",
-        "viewer",
+        "driver",
+        "customer",
     }
 
     def __init__(self, db: Session):
@@ -48,7 +49,7 @@ class UserService:
         *,
         email: str,
         password: str,
-        role: str = "viewer",
+        role: str = "customer",
     ) -> User:
         email = email.strip().lower()
         role = role.strip().lower()

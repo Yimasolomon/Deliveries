@@ -1,3 +1,11 @@
+import os
+
+# Test-only session secret. Never use this value in production.
+os.environ.setdefault(
+    "SESSION_SECRET_KEY",
+    "test-only-session-secret-not-for-production",
+)
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

@@ -66,8 +66,9 @@ def main() -> None:
             service.create_user(
                 email="AUTH_TEST@example.com",
                 password="AnotherPassword123!",
-                role="viewer",
+                role="customer"
             )
+
             raise AssertionError(
                 "Duplicate user creation should have failed."
             )
@@ -94,7 +95,7 @@ def main() -> None:
             service.create_user(
                 email="   ",
                 password="AnotherPassword123!",
-                role="viewer",
+                role="customer"
             )
             raise AssertionError(
                 "Empty email should have failed."
@@ -108,7 +109,7 @@ def main() -> None:
             service.create_user(
                 email="another@example.com",
                 password="",
-                role="viewer",
+                role="customer"
             )
             raise AssertionError(
                 "Empty password should have failed."
@@ -116,7 +117,6 @@ def main() -> None:
 
         except InvalidUserDataError:
             print("Empty password validation passed.")
-
         print("All user service tests passed successfully.")
 
     finally:
