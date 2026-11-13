@@ -148,13 +148,13 @@ def test_logout_clears_session(route_client):
     assert response.status_code == 303
     assert response.headers["location"] == "/login"
 
-    def test_deliveries_route_loads(route_client):
-        client, _ = route_client
+def test_deliveries_route_loads(authenticated_client):
+    client, _ = authenticated_client
 
-        response = client.get("/deliveries")
+    response = client.get("/deliveries")
 
-        assert response.status_code == 200
-        assert "Deliveries" in response.text
+    assert response.status_code == 200
+    assert "Deliveries" in response.text
 
 def test_deliveries_requires_login(route_client):
     client, _ = route_client
@@ -1160,3 +1160,186 @@ def test_security_headers(route_client):
         response.headers["Referrer-Policy"]
         == "strict-origin-when-cross-origin"
     )
+
+
+
+def test_registration_page_loads(route_client):
+    client, _ = route_client
+
+    response = client.get("/register")
+
+    assert response.status_code == 200
+    assert "Create Customer Account" in response.text
+    assert 'action="/register"' in response.text
+
+
+def test_customer_registration_creates_account_and_profile(
+    route_client,
+):
+    from sqlalchemy import select
+
+    client, session_factory = route_client
+
+    response = client.post(
+        "/register",
+        data={
+            "name": "Registration Customer",
+            "email": "registration@example.com",
+            "password": "TestPassword123!",
+            "phone": "08044444441",
+            "address": "Lagos, Nigeria",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/login"
+
+    db = session_factory()
+
+    try:
+        user = db.scalar(
+            select(User).where(
+                User.email == "registration@example.com"
+            )
+        )
+
+        assert user is not None
+        assert user.role == "customer"
+
+        customer = db.scalar(
+            select(Customer).where(
+                Customer.user_id == user.id
+            )
+        )
+
+        assert customer is not None
+        assert customer.name == "Registration Customer"
+        assert customer.phone == "08044444441"
+        assert customer.user_id == user.id
+
+    finally:
+        db.close()
+
+
+def test_registration_rejects_duplicate_email(route_client):
+    client, _ = route_client
+
+    registration_data = {
+        "name": "First Customer",
+        "email": "duplicate@example.com",
+        "password": "TestPassword123!",
+        "phone": "08044444442",
+        "address": "Lagos, Nigeria",
+    }
+
+    first_response = client.post(
+        "/register",
+        data=registration_data,
+        follow_redirects=False,
+    )
+
+    assert first_response.status_code == 303
+
+    second_response = client.post(
+        "/register",
+        data={
+            **registration_data,
+            "name": "Second Customer",
+            "phone": "08044444443",
+        },
+        follow_redirects=False,
+    )
+
+    assert second_response.status_code == 400
+    assert "already exists" in second_response.text
+
+
+def test_registration_rejects_duplicate_phone(route_client):
+    client, _ = route_client
+
+    registration_data = {
+        "name": "First Customer",
+        "email": "firstphone@example.com",
+        "password": "TestPassword123!",
+        "phone": "08044444444",
+        "address": "Lagos, Nigeria",
+    }
+
+    first_response = client.post(
+        "/register",
+        data=registration_data,
+        follow_redirects=False,
+    )
+
+    assert first_response.status_code == 303
+
+    second_response = client.post(
+        "/register",
+        data={
+            **registration_data,
+            "name": "Second Customer",
+            "email": "secondphone@example.com",
+        },
+        follow_redirects=False,
+    )
+
+    assert second_response.status_code == 400
+    assert "phone number already exists" in second_response.text
+
+
+def test_public_registration_cannot_assign_admin_role(
+    route_client,
+):
+    from sqlalchemy import select
+
+    client, session_factory = route_client
+
+    response = client.post(
+        "/register",
+        data={
+            "name": "Attempted Admin",
+            "email": "attemptedadmin@example.com",
+            "password": "TestPassword123!",
+            "phone": "08044444445",
+            "address": "Lagos, Nigeria",
+            "role": "admin",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+
+    db = session_factory()
+
+    try:
+        user = db.scalar(
+            select(User).where(
+                User.email == "attemptedadmin@example.com"
+            )
+        )
+
+        assert user is not None
+        assert user.role == "customer"
+
+    finally:
+        db.close()
+
+
+def test_registration_rejects_invalid_email(route_client):
+    client, _ = route_client
+
+    response = client.post(
+        "/register",
+        data={
+            "name": "Invalid Email Customer",
+            "email": "not-an-email",
+            "password": "TestPassword123!",
+            "phone": "08044444446",
+            "address": "Lagos, Nigeria",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 400
+    assert "valid email" in response.text
